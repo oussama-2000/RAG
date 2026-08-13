@@ -1,0 +1,29 @@
+rag-against-the-machine/
+│
+├── src/
+│   ├── __main__.py
+│   ├── cli.py
+│   ├── models.py
+│   ├── indexer.py
+│   ├── chunkers/
+│   │   ├── python.py
+│   │   └── markdown.py
+│   ├── retriever.py
+│   ├── generator.py
+│   ├── pipeline.py
+│   └── evaluator.py
+│
+├── data/
+│   ├── raw/
+│   │   └── vllm-0.10.1/
+│   ├── processed/
+│   ├── datasets/
+│   └── output/
+│
+├── tests/
+│
+├── pyproject.toml
+├── uv.lock
+├── Makefile
+├── README.md
+└── .gitignore
