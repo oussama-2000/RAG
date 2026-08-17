@@ -4,7 +4,6 @@ import tree_sitter_python
 
 
 PYTHON_LANGUAGE = Language(tree_sitter_python.language())
-
 parser = Parser(PYTHON_LANGUAGE)
 
 with open("data/test.py", "r") as file:
@@ -16,30 +15,35 @@ tree = parser.parse(source)
 
 root = tree.root_node
 
-def extract(root, max_chunk_size):
 
+def byte_to_char_index(source, byte_index):
+    return len(source[:byte_index].decode())
+
+
+def extract(root, max_chunk_size):
 
     for child in root.named_children:
 
-        # if child.type == "import_statement":
-        #     continue
+        size = len(source[child.start_byte:child.end_byte].decode())
 
-        size = child.end_byte - child.start_byte
-        
         if size <= max_chunk_size:
-            end = len(source[child.start_byte:child.end_byte].decode())
+            start = byte_to_char_index(source, child.start_byte)
+            end = byte_to_char_index(source, child.end_byte)
+            text = source[child.start_byte:child.end_byte].decode()
+
             print(
                 {
                     "type": child.type,
-                    "start_character_index": child.start_byte,
+                    "start_character_index": start,
                     "end_character_index": end,
-                    "size": end,
-                    "text": source[child.start_byte:child.end_byte].decode()
+                    "size": size,
+                    "text": text
                 }
             )
+
         else:
             extract(child, max_chunk_size)
 
+extract(root, 20)
 
-extract(root, 40)
 
