@@ -1,3 +1,5 @@
+import os
+
 # commentaire avec é
 
 def hello():
