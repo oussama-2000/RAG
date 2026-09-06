@@ -1,11 +1,14 @@
 import os
+import sys
 
-# commentaire avec é
+class Test:
+    pass
 
-def hello():
+
+def hello(msg: str):
     print("café")
     print("مرحبا")
+    if 3 < 2:
+        print("possible")
 
-def bye():
-    print("au revoir")
-
+print("model level")
