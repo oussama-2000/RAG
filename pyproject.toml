@@ -9,6 +9,7 @@ dependencies = [
     "flake8>=7.3.0",
     "mypy>=2.3.0",
     "pydantic>=2.13.4",
+    "rank-bm25>=0.2.2",
     "tqdm>=4.70.0",
     "tree-sitter>=0.26.0",
     "tree-sitter-python>=0.25.0",

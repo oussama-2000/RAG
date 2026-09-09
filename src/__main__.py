@@ -8,39 +8,29 @@ max_chunk_size = 100
 code_chunker = CodeChunker("data/test.py", max_chunk_size)
 text_chunker = TextChunker("data/test.md", max_chunk_size)
 
-# code_chunker.set_chunks()
-# code_chunks = []
-# with open("src/chunkers/chunks/code.json", "w") as file:
-#     for chunk in code_chunker.chunks:
-#         code_chunks.append(json.dumps(chunk))
-#     json.dump(code_chunks, file, indent=4)   
+code_chunker.set_chunks()
+
+with open("src/chunkers/chunks/code.json", "w") as file:
+    file.write("[")
+    i = 0
+    length = len(code_chunker.chunks)
+    for chunk in code_chunker.chunks:
+        json.dump(chunk, file, indent=4)
+        if i < length - 1:
+            file.write(",")
+        i+= 1
+    file.write("]")  
 
 text_chunker.set_chunks()
-text_chunks = []
+
 with open("src/chunkers/chunks/text.json", "w") as file:
+    file.write("[")
+    i = 0
+    length = len(text_chunker.chunks)
     for chunk in text_chunker.chunks:
-        text_chunks.append(chunk)
-    #     text_chunks.append(json.dumps(chunk))
-    # json.dump(text_chunks, file, indent=4)
+        json.dump(chunk, file, indent=4)
+        if i < length - 1:
+            file.write(",")
+        i+= 1
+    file.write("]")
 
-from rank_bm25 import BM25Okapi
-
-documents = [
-    document['text']
-    for document in text_chunks
-]
-
-tokenized_documents = [
-    document['text'].lower().split()
-    for document in text_chunks
-]
-
-bm25 = BM25Okapi(tokenized_documents)
-
-query = "how to install "
-tokenized_query = query.lower().split()
-
-scores = bm25.get_scores(tokenized_query)
-
-scores = bm25.get_top_n(tokenized_query, documents, n=1)
-print(scores)
