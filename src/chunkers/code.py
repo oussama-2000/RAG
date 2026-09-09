@@ -15,10 +15,10 @@ class CodeChunker:
         self.nodes = []
         self.chunks = []
 
-    def tree_parse(self):
+    def set_tree(self):
 
-        with open(self.file, "r") as f:
-            source = f.read()
+        with open(self.file, "r") as file:
+            source = file.read()
 
         self.source = source.encode("utf-8")
         self.tree = self.parser.parse(self.source)
@@ -27,58 +27,63 @@ class CodeChunker:
     def byte_to_char_index(self, source, byte_index):
         return len(source[:byte_index].decode())
 
-    def extract(self, node, level):
+    def set_nodes(self, node, level):
 
         for child in node.named_children:
-            size = len(self.source[child.start_byte:child.end_byte].decode())
+            text = self.source[child.start_byte:child.end_byte].decode()
+            size = len(text)
 
             if size <= self.max_chunk_size:
                 start = self.byte_to_char_index(self.source, child.start_byte)
                 end = self.byte_to_char_index(self.source, child.end_byte)
-                text = self.source[child.start_byte:child.end_byte].decode()
 
                 self.nodes.append(
                     {
                         "level": level,
                         "type": child.type,
-                        "start_character_index": start,
-                        "end_character_index": end,
+                        "first_character_index": start,
+                        "last_character_index": end,
                         "size": size,
                         "text": text
                     }
                 )
             else:
-                self.extract(child, level + 1)
+                self.set_nodes(child, level + 1)
 
-    def chunks_generator(self):
-
+    def set_chunks(self):
+        self.set_tree()
+        self.set_nodes(self.root, 0)
         i = 0
 
+        chunk_id = 0
         while i < len(self.nodes):
 
-            storage = self.nodes[i]['size']
+            buffer = self.nodes[i]['size']
 
             current_chunk = {
-                'start_character_index': self.nodes[i]['start_character_index'],
-                'end_character_index': self.nodes[i]['end_character_index'],
+                'id': chunk_id,
+                'file_path': self.file,
+                'first_character_index': self.nodes[i]['first_character_index'],
+                'last_character_index': self.nodes[i]['last_character_index'],
                 'text': self.nodes[i]['text']
             }
 
             j = i + 1
-            while storage < self.max_chunk_size and j < len(self.nodes):
+            while buffer < self.max_chunk_size and j < len(self.nodes):
 
-                tmp = storage + self.nodes[j]['size']
+                tmp = buffer + self.nodes[j]['size']
 
                 if tmp > self.max_chunk_size:
                     break
 
                 if self.nodes[i]['level'] == self.nodes[j]['level']:
-                    storage += self.nodes[j]['size']
+                    buffer += self.nodes[j]['size']
                     current_chunk['text'] += '\n' + self.nodes[j]['text']
-                    current_chunk['end_character_index'] = self.nodes[j]['end_character_index']
+                    current_chunk['last_character_index'] = self.nodes[j]['last_character_index']
                 else:
                     break
                 j += 1
 
             self.chunks.append(current_chunk)
             i = j
+            chunk_id += 1

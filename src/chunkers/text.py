@@ -1,38 +1,102 @@
 
-def process():
-    with open("data/test.md") as file:
-        source = file.read()
-    print(source)
-    i = 0
+class TextChunker:
+    def __init__(self, file, max_chunk_size):
+        self.file = file
+        self.max_chunk_size = max_chunk_size
+        self.nodes = []
+        self.chunks = []
+        self.source = None
 
-    while i < len(source):
-        state = "par"
-        text = source[i]
+    def set_nodes(self):
+        with open(self.file) as file:
+            self.source = file.readlines()
 
-        if source[i] == "#":
-            state = "title"
-        elif source[i:i+2] == "```":
-            state = "code"
-            print("iis")
+        i = 0
 
-        j = i + 1
-        while j < len(source):
-            if source[j] == "#":
+        while i < len(self.source):
+
+            state = "par"
+
+            buffer = self.source[i]
+
+            if self.source[i].startswith("#"):
                 state = "title"
-            elif source[i:i+2] == "```":
-                state = "code"
 
-            if state in ["title", "par"] and source[j] == "\n":
-                break
-            if state == "code" and source[j:j+2] == "```" and j > i:
-                break
-                 
-            text += source[j]
-            j += 1
+            j = i + 1
+            while j < len(self.source):
 
-        i = j
+                if len(buffer) > self.max_chunk_size:
+                    cut_index = 0
+                    t = buffer[:self.max_chunk_size]
 
-        print({
-            "type": state,
-            "text": text
-        })
+                    if "." in t:
+                        cut_index = t.rindex(".") + 1
+                    elif "," in t:
+                        cut_index = t.rindex(",") + 1
+                    elif " " in t:
+                        cut_index = t.rindex(" ") + 1
+                    else:
+                        cut_index = self.max_chunk_size
+
+                    text = buffer[:cut_index]
+                    self.nodes.append({
+                        "type": state,
+                        "size": len(text),
+                        "text": text
+                    })
+                    buffer = buffer[cut_index:]
+
+                    continue
+
+                if state == "title":
+                    break
+
+                if state == "par" and self.source[j].startswith("#"):
+                    break
+
+                buffer += self.source[j]
+
+                j += 1
+            self.nodes.append(
+                {
+                    "type": state,
+                    "size": len(buffer),
+                    "text": buffer
+                }
+            )
+            i = j
+
+    def set_chunks(self):
+
+        self.set_nodes()
+        
+        i = 0
+
+        start, end = (0, 0)
+        chunk_id = 0
+        while i < len(self.nodes):
+            buffer = self.nodes[i]['text']
+
+            j = i + 1
+            while j < len(self.nodes):
+
+                if self.nodes[j]['type'] == "title":
+                    break
+                if len(buffer + self.nodes[j]['text']) < self.max_chunk_size:
+                    buffer += self.nodes[j]['text']
+                    j += 1
+                else:
+                    break
+            i = j
+
+            end += len(buffer)
+
+            self.chunks.append({
+                "id": chunk_id,
+                "file_path": self.file,
+                "first_character_index": start,
+                "last_character_index": end,
+                "text": buffer
+            })
+            start += len(buffer)
+            chunk_id += 1
