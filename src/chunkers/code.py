@@ -76,7 +76,7 @@ class CodeChunker:
                 if tmp > self.max_chunk_size:
                     break
 
-                if self.nodes[i]['level'] == self.nodes[j]['level']:
+                if self.nodes[i]['level'] == self.nodes[j]['level'] and self.nodes[j]['type'] != 'function_definition':
                     buffer += self.nodes[j]['size']
                     current_chunk['text'] += '\n' + self.nodes[j]['text']
                     current_chunk['last_character_index'] = self.nodes[j]['last_character_index']

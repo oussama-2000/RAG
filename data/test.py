@@ -1,14 +1,19 @@
 import os
 import sys
 
-class Test:
-    pass
 
+def division(a, b):
 
-def hello(msg: str):
-    print("café")
-    print("مرحبا")
-    if 3 < 2:
-        print("possible")
+    return a / b
 
-print("model level")
+def concatination(s1, s2):
+
+    return s1 + s2
+
+def sum(a, b):
+    """sum function"""
+    return a + b
+
+def sum(a, b):
+    "blalalalal blalala"
+    return a + b
