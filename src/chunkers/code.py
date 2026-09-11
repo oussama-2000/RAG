@@ -53,6 +53,7 @@ class CodeChunker:
     def set_chunks(self):
         self.set_tree()
         self.set_nodes(self.root, 0)
+
         i = 0
 
         chunk_id = 0
@@ -61,7 +62,7 @@ class CodeChunker:
             buffer = self.nodes[i]['size']
 
             current_chunk = {
-                'id': chunk_id,
+                # 'id': chunk_id,
                 'file_path': self.file,
                 'first_character_index': self.nodes[i]['first_character_index'],
                 'last_character_index': self.nodes[i]['last_character_index'],
@@ -76,7 +77,7 @@ class CodeChunker:
                 if tmp > self.max_chunk_size:
                     break
 
-                if self.nodes[i]['level'] == self.nodes[j]['level'] and self.nodes[j]['type'] != 'function_definition':
+                if self.nodes[i]['level'] == self.nodes[j]['level'] and self.nodes[j]['type'] != 'identifier':
                     buffer += self.nodes[j]['size']
                     current_chunk['text'] += '\n' + self.nodes[j]['text']
                     current_chunk['last_character_index'] = self.nodes[j]['last_character_index']

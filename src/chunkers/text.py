@@ -92,7 +92,7 @@ class TextChunker:
             end += len(buffer)
 
             self.chunks.append({
-                "id": chunk_id,
+                # "id": chunk_id,
                 "file_path": self.file,
                 "first_character_index": start,
                 "last_character_index": end,

@@ -2,9 +2,10 @@
 
 from chunkers.code import CodeChunker
 from chunkers.text import TextChunker
+from models import MinimalSource
 import json
 
-max_chunk_size = 50
+max_chunk_size = 100
 
 code_chunker = CodeChunker("data/test.py", max_chunk_size)
 text_chunker = TextChunker("data/test.md", max_chunk_size)
@@ -12,10 +13,8 @@ text_chunker = TextChunker("data/test.md", max_chunk_size)
 code_chunker.set_chunks()
 
 code_chunks = []
-# with open("src/chunkers/chunks/code.json", "w") as file:
 
 for chunk in code_chunker.chunks:
-    # json.dump(chunk, file, indent=4)
     code_chunks.append(chunk)
 
 
@@ -25,14 +24,14 @@ from indexer import BM25Indexer
 index = BM25Indexer()
 
 #ingest
-index.build(code_chunks)
-index.save("databytes")
+index.ingest(code_chunks, "data/processed/code_chunks")
 
+# retrival
+index.load("data/processed/code_chunks")
+chunks = index.search("test class", 1)
+print(chunks)
 
-index.load("databytes")
+for chunk in chunks:
+    MinimalSource(**chunk)
 
-print(index.chunks)
-print(index.tokenized_chunks)
-print(index.bm25)
-index.search("sum function")
 

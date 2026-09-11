@@ -15,17 +15,17 @@ class BM25Indexer:
     def muliple_remove(self, element, list):
         while element in list:
             list.remove(element)
+    def tokenize(self, text):
+        return re.split(r'[ ,(){}:\n]', text.lower())
     
     def build(self, chunks):
         self.chunks = chunks
         texts = [chunk['text'] for chunk in chunks]
 
         tokenized_chunks = [
-            re.split(r'[ ,(){}:\n]', chunk.lower())
+            self.tokenize(chunk)
             for chunk in texts
         ]
-        print(tokenized_chunks)
-        print("=" * 10)
 
         for chunk in tokenized_chunks:
             for token in chunk:
@@ -44,6 +44,10 @@ class BM25Indexer:
         with open(path, "wb") as file:
             pickle.dump(data, file)
 
+    def ingest(self, chunks, save_file_path):
+        self.build(chunks)
+        self.save(save_file_path)
+    
     def load(self, path):
 
         with open(path, "rb") as file:
@@ -53,13 +57,19 @@ class BM25Indexer:
         self.tokenized_chunks = data["tokenized_tokens"]
         self.bm25 = BM25Okapi(self.tokenized_chunks)
 
-    def search(self, query):
-        tokenized_query = query.lower().split()
+    def search(self, query, k):
+        tokenized_query = self.tokenize(query)
 
         scores = self.bm25.get_scores(tokenized_query)
-        index = numpy.argmax(scores)
+        
+        result = []
+        for _ in range(k):
+            index = numpy.argmax(scores)
+            scores = numpy.delete(scores, index)
+            result.append(self.chunks[index])
 
-        print(self.chunks[index])
+        return result
+
 
 
 
