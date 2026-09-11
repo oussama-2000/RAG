@@ -1,16 +1,15 @@
 
 class TextChunker:
-    def __init__(self, file, max_chunk_size):
-        self.file = file
-        self.max_chunk_size = max_chunk_size
-        self.nodes = []
-        self.chunks = []
+    def __init__(self):
+        self.file = None
+        self.max_chunk_size = 0
         self.source = None
 
     def set_nodes(self):
         with open(self.file) as file:
             self.source = file.readlines()
 
+        nodes = []
         i = 0
 
         while i < len(self.source):
@@ -39,7 +38,7 @@ class TextChunker:
                         cut_index = self.max_chunk_size
 
                     text = buffer[:cut_index]
-                    self.nodes.append({
+                    nodes.append({
                         "type": state,
                         "size": len(text),
                         "text": text
@@ -57,7 +56,7 @@ class TextChunker:
                 buffer += self.source[j]
 
                 j += 1
-            self.nodes.append(
+            nodes.append(
                 {
                     "type": state,
                     "size": len(buffer),
@@ -66,24 +65,27 @@ class TextChunker:
             )
             i = j
 
-    def set_chunks(self):
+        return nodes
 
-        self.set_nodes()
+    
+    def set_chunks(self, file_path, max_chunk_size):
+        self.file = file_path
+        self.max_chunk_size = max_chunk_size
+        nodes = self.set_nodes()
         
         i = 0
 
         start, end = (0, 0)
-        chunk_id = 0
-        while i < len(self.nodes):
-            buffer = self.nodes[i]['text']
+        while i < len(nodes):
+            buffer = nodes[i]['text']
 
             j = i + 1
-            while j < len(self.nodes):
+            while j < len(nodes):
 
-                if self.nodes[j]['type'] == "title":
+                if nodes[j]['type'] == "title":
                     break
-                if len(buffer + self.nodes[j]['text']) < self.max_chunk_size:
-                    buffer += self.nodes[j]['text']
+                if len(buffer + nodes[j]['text']) < max_chunk_size:
+                    buffer += nodes[j]['text']
                     j += 1
                 else:
                     break
@@ -91,12 +93,13 @@ class TextChunker:
 
             end += len(buffer)
 
-            self.chunks.append({
-                # "id": chunk_id,
-                "file_path": self.file,
-                "first_character_index": start,
-                "last_character_index": end,
-                "text": buffer
-            })
+            yield (
+                {
+                    "id": None,
+                    "file_path": self.file,
+                    "first_character_index": start,
+                    "last_character_index": end,
+                    "text": buffer
+                } 
+            )
             start += len(buffer)
-            chunk_id += 1

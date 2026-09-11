@@ -3,35 +3,45 @@
 from chunkers.code import CodeChunker
 from chunkers.text import TextChunker
 from models import MinimalSource
+from reader import Reader
+from indexer import BM25Indexer
 import json
 
-max_chunk_size = 100
+reader = Reader("data/raw/vllm-0.10.1")
+reader.read()
+paths = reader.paths
 
-code_chunker = CodeChunker("data/test.py", max_chunk_size)
-text_chunker = TextChunker("data/test.md", max_chunk_size)
-
-code_chunker.set_chunks()
-
-code_chunks = []
-
-for chunk in code_chunker.chunks:
-    code_chunks.append(chunk)
+max_chunk_size = 2000
+code_chunker = CodeChunker()
+text_chunker = TextChunker()
 
 
+with open("chunks_storage", "w") as storage:
+    index = 0
+    for file in paths:
+        if file.suffix.lower() == ".py":
+            chunks = code_chunker.set_chunks(str(file), max_chunk_size)
+            for chunk in chunks:
+                chunk['id'] = index
+                storage.write(str(chunk) + "\n")
+                index += 1
 
-from indexer import BM25Indexer
+        elif file.suffix.lower() in [".txt", ".md"]:
+            chunks = text_chunker.set_chunks(str(file), max_chunk_size)
+            for chunk in chunks:
+                chunk['id'] = index
+                storage.write(str(chunk) + "\n")
+                index += 1       
 
-index = BM25Indexer()
+# index = BM25Indexer()
+# # with open("chunks_storage", "r") as storage:
 
-#ingest
-index.ingest(code_chunks, "data/processed/code_chunks")
+#     #ingest
+# index.ingest(chunks_storage, "data/processed/code_chunks")
 
-# retrival
-index.load("data/processed/code_chunks")
-chunks = index.search("test class", 1)
-print(chunks)
-
-for chunk in chunks:
-    MinimalSource(**chunk)
+# # retrival
+# index.load("data/processed/code_chunks")
+# chunks = index.search("test class", 1)
+# print(chunks)
 
 

@@ -1,10 +1,15 @@
 from pathlib import Path
 
-base_dir = Path("data/raw/vllm-0.10.1")
+class Reader:
+    def __init__(self, resources_path):
+        self.base_dir = Path(resources_path)
+        self.patterns = [".py", ".md", ".txt", ".test"]
+        self.paths = []
 
-text_files = base_dir.rglob("*.py")
+    def read(self):
 
-print(text_files)
+        files = self.base_dir.rglob("*")
 
-for file in text_files:
-    print(file)
+        for file in files:
+            if file.suffix.lower() in self.patterns:
+                self.paths.append(file)
