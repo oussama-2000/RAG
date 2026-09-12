@@ -95,7 +95,6 @@ class TextChunker:
 
             yield (
                 {
-                    "id": None,
                     "file_path": self.file,
                     "first_character_index": start,
                     "last_character_index": end,

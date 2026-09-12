@@ -30,8 +30,6 @@ class CodeChunker:
         nodes = []
 
         for child in node.named_children:
-            # if child.type in ["identifier", "parameter"]:
-            #     continue
 
             text = self.source[child.start_byte:child.end_byte].decode()
             size = len(text)
@@ -70,7 +68,6 @@ class CodeChunker:
             buffer = nodes[i]['size']
 
             current_chunk = {
-                'id': None,
                 'file_path': self.file,
                 'first_character_index': nodes[i]['first_character_index'],
                 'last_character_index': nodes[i]['last_character_index'],

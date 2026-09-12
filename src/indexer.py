@@ -4,6 +4,9 @@ from rank_bm25 import BM25Okapi
 import re
 import pickle
 import numpy
+from models import MinimalSource, MinimalSearchResults, StudentSearchResults, RagDataset
+from pathlib import Path
+import json
 
 
 class BM25Indexer:
@@ -11,10 +14,7 @@ class BM25Indexer:
         self.chunks = []
         self.tokenized_chunks = []
         self.bm25 = None
-
-    def muliple_remove(self, element, list):
-        while element in list:
-            list.remove(element)
+            
     def tokenize(self, text):
         return re.split(r'[ ,(){}:\n]', text.lower())
     
@@ -27,17 +27,12 @@ class BM25Indexer:
             for chunk in texts
         ]
 
-        for chunk in tokenized_chunks:
-            for token in chunk:
-                if len(token) < 2 or token.isspace() or not token:
-                    self.muliple_remove(token, chunk)
-
         self.tokenized_chunks = tokenized_chunks
         self.bm25 = BM25Okapi(tokenized_chunks)
 
     def save(self, path):
         data  = {
-            "chunks": self.chunks,
+            "chunks": [MinimalSource(**chunk) for chunk in self.chunks],
             "tokenized_tokens": self.tokenized_chunks
         }
 
@@ -57,51 +52,42 @@ class BM25Indexer:
         self.tokenized_chunks = data["tokenized_tokens"]
         self.bm25 = BM25Okapi(self.tokenized_chunks)
 
-    def search(self, query, k):
-        tokenized_query = self.tokenize(query)
+    def search(self, question, k):
+        tokenized_query = self.tokenize(question.question)
 
         scores = self.bm25.get_scores(tokenized_query)
         
         result = []
+        seen_indexs = []
         for _ in range(k):
+            
             index = numpy.argmax(scores)
-            scores = numpy.delete(scores, index)
-            result.append(self.chunks[index])
 
-        return result
+            if index not in seen_indexs:
+                result.append(self.chunks[index])
+                seen_indexs.append(index)
 
+            scores[index] = float("-infinity")
 
+        return MinimalSearchResults(
+                question_id=question.question_id,
+                question=question.question,
+                retrieved_sources=result
+            )
+        
 
+    def get_search_result(self, datasets_path, k):
 
+        dataset_folder = Path(datasets_path)
+        datasets = dataset_folder.rglob("*.json")
 
+        student_results: StudentSearchResults[MinimalSearchResults] = []
+        for file in datasets:
 
+            with open(str(file), "r") as file:
+                questions = RagDataset(**json.load(file))
+                for question in questions.rag_questions:
+                    chunks = self.search(question, 1)
+                    student_results.append(chunks)
 
-
-
-
-
-
-
-
-
-
-# documents = [
-#     "python functions and classes",
-#     "install vllm using uv",
-#     "bm25 retrieval algorithm vllm",
-# ]
-
-# tokenized_documents = [
-#     document.lower().split()
-#     for document in documents
-# ]
-
-# bm25 = BM25Okapi(tokenized_documents)
-
-# query = "install vllm"
-# tokenized_query = query.lower().split()
-
-# scores = bm25.get_scores(tokenized_query)
-
-# scores = bm25.get_top_n(tokenized_query, documents, n=1)
-# print(scores)
+        return StudentSearchResults(search_results=student_results, k=1)
