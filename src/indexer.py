@@ -11,7 +11,9 @@ import os
 
 
 class RagPipeline:
-    def __init__(self):
+    def __init__(self, resources_dir_path):
+        self.resources_dir_path = resources_dir_path
+        self.resources_last_modification = 0
         self.chunks = []
         self.tokenized_chunks = []
         self.bm25 = None
@@ -34,19 +36,22 @@ class RagPipeline:
     def save(self, path):
         data  = {
             "chunks": [MinimalSource(**chunk) for chunk in self.chunks],
-            "tokenized_tokens": self.tokenized_chunks
+            "tokenized_tokens": self.tokenized_chunks,
+            "last_modification": os.path.getatime(self.resources_dir_path)
         }
 
         with open(path, "wb") as file:
             pickle.dump(data, file)
-
+    
+    def is_resources_changed(self):
+        return self.resources_last_modification != os.path.getatime(self.resources_dir_path)
+    
     def ingest(self, chunks, save_file_path):
-
-        if os.path.getsize(save_file_path) != 0:
-            print("storage is full")
+        if self.is_resources_changed():
+            print("the resurses didn't changed , no need for ingestion")
             return
         else:
-            print("storage is empty")
+            print("file not changed ingestion...")
             
         self.build(chunks)
         self.save(save_file_path)
@@ -58,6 +63,7 @@ class RagPipeline:
 
         self.chunks = data["chunks"]
         self.tokenized_chunks = data["tokenized_tokens"]
+        self.resources_last_modification = data["last_modification"]
         self.bm25 = BM25Okapi(self.tokenized_chunks)
 
     def search(self, question, k):

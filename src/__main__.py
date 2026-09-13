@@ -33,7 +33,7 @@ for file in paths:
             all_chunks.append(chunk)
 
 
-index = RagPipeline()
+index = RagPipeline("data/raw/vllm-0.10.1")
 
 index.ingest(all_chunks, "data/processed/indexed_chunks")
 
