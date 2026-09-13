@@ -7,9 +7,10 @@ import numpy
 from models import MinimalSource, MinimalSearchResults, StudentSearchResults, RagDataset
 from pathlib import Path
 import json
+import os
 
 
-class BM25Indexer:
+class RagPipeline:
     def __init__(self):
         self.chunks = []
         self.tokenized_chunks = []
@@ -20,11 +21,11 @@ class BM25Indexer:
     
     def build(self, chunks):
         self.chunks = chunks
-        texts = [chunk['text'] for chunk in chunks]
+        chunks_content = [chunk['text'] for chunk in chunks]
 
         tokenized_chunks = [
             self.tokenize(chunk)
-            for chunk in texts
+            for chunk in chunks_content
         ]
 
         self.tokenized_chunks = tokenized_chunks
@@ -40,6 +41,13 @@ class BM25Indexer:
             pickle.dump(data, file)
 
     def ingest(self, chunks, save_file_path):
+
+        if os.path.getsize(save_file_path) != 0:
+            print("storage is full")
+            return
+        else:
+            print("storage is empty")
+            
         self.build(chunks)
         self.save(save_file_path)
     
@@ -58,14 +66,11 @@ class BM25Indexer:
         scores = self.bm25.get_scores(tokenized_query)
         
         result = []
-        seen_indexs = []
-        for _ in range(k):
+        for _ in range(min(k, len(self.chunks))):
             
             index = numpy.argmax(scores)
 
-            if index not in seen_indexs:
-                result.append(self.chunks[index])
-                seen_indexs.append(index)
+            result.append(self.chunks[index])
 
             scores[index] = float("-infinity")
 
@@ -81,13 +86,13 @@ class BM25Indexer:
         dataset_folder = Path(datasets_path)
         datasets = dataset_folder.rglob("*.json")
 
-        student_results: StudentSearchResults[MinimalSearchResults] = []
+        student_results: list[MinimalSearchResults] = []
         for file in datasets:
 
             with open(str(file), "r") as file:
                 questions = RagDataset(**json.load(file))
                 for question in questions.rag_questions:
-                    chunks = self.search(question, 1)
+                    chunks = self.search(question, k)
                     student_results.append(chunks)
 
-        return StudentSearchResults(search_results=student_results, k=1)
+        return StudentSearchResults(search_results=student_results, k=k)

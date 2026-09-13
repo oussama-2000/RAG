@@ -1,6 +1,11 @@
 from tree_sitter import Language, Parser
 import tree_sitter_python
-
+"""
+tree_sitter: incremental parsing library, parses source code into concrete syntax trees.
+Parser: the object that takes source code and produces a CST based on the assigned grammar. 
+Language: object that provides the parsing rules for specific programming language.
+tree_sitter_python: python grammar for tree_sitter
+"""
 
 class CodeChunker:
 
@@ -35,7 +40,6 @@ class CodeChunker:
             size = len(text)
 
             if size <= self.max_chunk_size:
-
 
                 start = self.byte_to_char_index(self.source, child.start_byte)
                 end = self.byte_to_char_index(self.source, child.end_byte)

@@ -2,12 +2,10 @@
 
 from chunkers.code import CodeChunker
 from chunkers.text import TextChunker
-from models import RagDataset, StudentSearchResults, MinimalSearchResults
+from models import StudentSearchResults
 from reader import Reader
-from indexer import BM25Indexer
-import json
+from indexer import RagPipeline
 import time
-from pathlib import Path
 
 
 reader = Reader("data/raw/vllm-0.10.1")
@@ -35,16 +33,15 @@ for file in paths:
             all_chunks.append(chunk)
 
 
+index = RagPipeline()
 
-index = BM25Indexer()
-
-index.ingest(all_chunks, "data/processed/code_chunks")
+index.ingest(all_chunks, "data/processed/indexed_chunks")
 
 # retrival
-index.load("data/processed/code_chunks")
-
+index.load("data/processed/indexed_chunks")
 
 student_search: StudentSearchResults = index.get_search_result("data/datasets_public/public", 1)
+print(len(student_search.search_results))
 
 print(f"time: {time.time() - start}")
 
