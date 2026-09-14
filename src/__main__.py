@@ -45,18 +45,13 @@ student_search: StudentSearchResults = index.get_search_result("data/datasets_pu
 
 os.makedirs("data/search_results", exist_ok=True)
 
-docs_content = {"search_results": [], "k": 3}
-code_content = {"search_results": [], "k": 3}
+content = {"search_results": [], "k": 3}
+
 
 for result in student_search.search_results:
     sources = []
-    file_path = ""
+
     for source in result.retrieved_sources:
-        if source.file_path.endswith(".md") or source.file_path.endswith(".txt"):
-            print("docsss")
-            file_path = "docs"
-        else:
-            file_path = "code"
 
             sources.append({
                 "file_path": source.file_path,
@@ -64,25 +59,17 @@ for result in student_search.search_results:
                 "last_character_index": source.last_character_index
             })
 
-    if file_path == "docs":
-        docs_content['search_results'].append({
-            "question_id": result.question_id,
-            "question": result.question,
-            "retrived_sources": sources
-        })
-    else:
-        code_content['search_results'].append({
-            "question_id": result.question_id,
-            "question": result.question,
-            "retrived_sources": sources
-        })
+    content['search_results'].append({
+        "question_id": result.question_id,
+        "question": result.question,
+        "retrived_sources": sources
+    })
+
       
 
         
 with open("data/search_results/dataset_docs_public.json", "w") as file:
-    json.dump(docs_content, file, indent=4)
+    json.dump(content, file, indent=4)
 
-with open("data/search_results/dataset_code_public.json", "w") as file:
-    json.dump(code_content, file, indent=4)
 
 print(f"time: {time.time() - start}")
