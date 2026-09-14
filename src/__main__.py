@@ -6,13 +6,15 @@ from models import StudentSearchResults
 from reader import Reader
 from indexer import RagPipeline
 import time
+import os
+import json
 
 
 reader = Reader("data/raw/vllm-0.10.1")
 reader.read()
 paths = reader.paths
 
-max_chunk_size = 200
+max_chunk_size = 2000
 code_chunker = CodeChunker()
 text_chunker = TextChunker()
 
@@ -32,17 +34,55 @@ for file in paths:
         for chunk in chunks:
             all_chunks.append(chunk)
 
-
-index = RagPipeline("data/raw/vllm-0.10.1")
+index = RagPipeline()
 
 index.ingest(all_chunks, "data/processed/indexed_chunks")
 
 # retrival
 index.load("data/processed/indexed_chunks")
 
-student_search: StudentSearchResults = index.get_search_result("data/datasets_public/public", 1)
-print(len(student_search.search_results))
+student_search: StudentSearchResults = index.get_search_result("data/datasets_public/public/UnansweredQuestions", 3)
+
+os.makedirs("data/search_results", exist_ok=True)
+
+docs_content = {"search_results": [], "k": 3}
+code_content = {"search_results": [], "k": 3}
+
+for result in student_search.search_results:
+    sources = []
+    file_path = ""
+    for source in result.retrieved_sources:
+        if source.file_path.endswith(".md") or source.file_path.endswith(".txt"):
+            print("docsss")
+            file_path = "docs"
+        else:
+            file_path = "code"
+
+            sources.append({
+                "file_path": source.file_path,
+                "first_character_index": source.first_character_index,
+                "last_character_index": source.last_character_index
+            })
+
+    if file_path == "docs":
+        docs_content['search_results'].append({
+            "question_id": result.question_id,
+            "question": result.question,
+            "retrived_sources": sources
+        })
+    else:
+        code_content['search_results'].append({
+            "question_id": result.question_id,
+            "question": result.question,
+            "retrived_sources": sources
+        })
+      
+
+        
+with open("data/search_results/dataset_docs_public.json", "w") as file:
+    json.dump(docs_content, file, indent=4)
+
+with open("data/search_results/dataset_code_public.json", "w") as file:
+    json.dump(code_content, file, indent=4)
 
 print(f"time: {time.time() - start}")
-
-

@@ -4,16 +4,14 @@ from rank_bm25 import BM25Okapi
 import re
 import pickle
 import numpy
-from models import MinimalSource, MinimalSearchResults, StudentSearchResults, RagDataset
+from models import MinimalSource, MinimalSearchResults, StudentSearchResults, RagDataset, AnsweredQuestion
 from pathlib import Path
 import json
 import os
 
 
 class RagPipeline:
-    def __init__(self, resources_dir_path):
-        self.resources_dir_path = resources_dir_path
-        self.resources_last_modification = 0
+    def __init__(self):
         self.chunks = []
         self.tokenized_chunks = []
         self.bm25 = None
@@ -37,7 +35,6 @@ class RagPipeline:
         data  = {
             "chunks": [MinimalSource(**chunk) for chunk in self.chunks],
             "tokenized_tokens": self.tokenized_chunks,
-            "last_modification": os.path.getatime(self.resources_dir_path)
         }
 
         with open(path, "wb") as file:
@@ -47,11 +44,6 @@ class RagPipeline:
         return self.resources_last_modification != os.path.getatime(self.resources_dir_path)
     
     def ingest(self, chunks, save_file_path):
-        if self.is_resources_changed():
-            print("the resurses didn't changed , no need for ingestion")
-            return
-        else:
-            print("file not changed ingestion...")
             
         self.build(chunks)
         self.save(save_file_path)
@@ -63,7 +55,6 @@ class RagPipeline:
 
         self.chunks = data["chunks"]
         self.tokenized_chunks = data["tokenized_tokens"]
-        self.resources_last_modification = data["last_modification"]
         self.bm25 = BM25Okapi(self.tokenized_chunks)
 
     def search(self, question, k):

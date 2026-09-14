@@ -1,0 +1,351 @@
+{
+    "search_results": [
+        {
+            "question_id": "8cb284ad-ec64-4189-ad3a-dd1bcd05bc09",
+            "question": "What error is raised when full attention group ids and other attention group ids interleave in HybridKVCacheCoordinator?",
+            "retrived_sources": [
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/v1/core/kv_cache_utils.py",
+                    "first_character_index": 0,
+                    "last_character_index": 1979
+                }
+            ]
+        },
+        {
+            "question_id": "4830d85c-33a2-4cef-a1cc-9ccad3e8b51b",
+            "question": "What exception is raised when pixel_values has incorrect number of channels in InternS1VisionEmbeddings forward method?",
+            "retrived_sources": [
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/models/llava.py",
+                    "first_character_index": 1998,
+                    "last_character_index": 3823
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/models/aya_vision.py",
+                    "first_character_index": 1960,
+                    "last_character_index": 2512
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/models/glm4_1v.py",
+                    "first_character_index": 4019,
+                    "last_character_index": 5578
+                }
+            ]
+        },
+        {
+            "question_id": "937a3e70-2b84-4431-8cb3-08e01991710f",
+            "question": "What does the HunyuanA13BReasoningParser return when reasoning_content or response_content has zero length?",
+            "retrived_sources": [
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/entrypoints/harmony_utils.py",
+                    "first_character_index": 12923,
+                    "last_character_index": 13989
+                }
+            ]
+        },
+        {
+            "question_id": "c593f6af-5d7c-472c-91f1-39020982d9d4",
+            "question": "What are all the registered KV connector names in vLLM's KVConnectorFactory?",
+            "retrived_sources": [
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/distributed/kv_transfer/kv_transfer_state.py",
+                    "first_character_index": 0,
+                    "last_character_index": 1523
+                }
+            ]
+        },
+        {
+            "question_id": "926b7602-3c5a-48fc-9f25-54eb00d78f0d",
+            "question": "What is the default value of the kv_states parameter in HunYuanModel's forward method?",
+            "retrived_sources": [
+                {
+                    "file_path": "data/raw/vllm-0.10.1/tests/kernels/attention/test_encoder_decoder_attn.py",
+                    "first_character_index": 29899,
+                    "last_character_index": 30465
+                }
+            ]
+        },
+        {
+            "question_id": "56027a35-434a-4c25-9e4d-7964096500c7",
+            "question": "What hyperparameters must be shared across all layers in vLLM's FlashInfer backend according to infer_global_hyperparameters?",
+            "retrived_sources": [
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/attention/backends/flashinfer.py",
+                    "first_character_index": 5600,
+                    "last_character_index": 6535
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/attention/backends/flashinfer.py",
+                    "first_character_index": 1987,
+                    "last_character_index": 5597
+                }
+            ]
+        },
+        {
+            "question_id": "e9157a40-4465-4de7-bd4d-033b4c173493",
+            "question": "What is the requires_grad value set for parameters in GPTQMarlin24's process_weights_after_loading method?",
+            "retrived_sources": [
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/model_loader/utils.py",
+                    "first_character_index": 3703,
+                    "last_character_index": 5266
+                }
+            ]
+        },
+        {
+            "question_id": "5e9ccc6d-8cc5-4579-b891-8fb40b40012a",
+            "question": "What is the default value of the stream parameter in vLLM's OpenAI protocol translation parameters?",
+            "retrived_sources": [
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/entrypoints/openai/protocol.py",
+                    "first_character_index": 85108,
+                    "last_character_index": 90361
+                }
+            ]
+        },
+        {
+            "question_id": "d7e4baa5-3106-4de4-b164-4de3211de137",
+            "question": "What class does TritonScaledMMLinearKernel inherit from in vLLM's quantization kernels?",
+            "retrived_sources": [
+                {
+                    "file_path": "data/raw/vllm-0.10.1/tests/quantization/test_compressed_tensors.py",
+                    "first_character_index": 0,
+                    "last_character_index": 1997
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/examples/offline_inference/rlhf_utils.py",
+                    "first_character_index": 2409,
+                    "last_character_index": 4016
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/examples/offline_inference/rlhf_utils.py",
+                    "first_character_index": 878,
+                    "last_character_index": 2406
+                }
+            ]
+        },
+        {
+            "question_id": "c544d846-d47c-4254-9ff4-a79467b234ce",
+            "question": "How many bytes are allocated for the internal field in ncclUniqueId structure in vLLM's PyNCCL wrapper?",
+            "retrived_sources": [
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/distributed/device_communicators/pynccl_wrapper.py",
+                    "first_character_index": 0,
+                    "last_character_index": 2048
+                }
+            ]
+        },
+        {
+            "question_id": "4d752f03-1006-4df9-9fde-98b947c79f66",
+            "question": "What is the default value of the pin_memory parameter in MultiModalKwargs._try_stack method?",
+            "retrived_sources": [
+                {
+                    "file_path": "data/raw/vllm-0.10.1/tests/kernels/attention/test_encoder_decoder_attn.py",
+                    "first_character_index": 29899,
+                    "last_character_index": 30465
+                }
+            ]
+        },
+        {
+            "question_id": "a1660e69-44a1-48da-a2a7-5a84be305016",
+            "question": "What is the default value of the spec_step_index parameter in DeepSeekMultiTokenPredictor's forward method?",
+            "retrived_sources": [
+                {
+                    "file_path": "data/raw/vllm-0.10.1/tests/kernels/attention/test_encoder_decoder_attn.py",
+                    "first_character_index": 29899,
+                    "last_character_index": 30465
+                }
+            ]
+        },
+        {
+            "question_id": "cb7cbccd-ab96-4695-9c7a-9197e6b254a8",
+            "question": "What is the default value for apply_router_weight_on_input parameter in the DeepGemm MoE kernel function call?",
+            "retrived_sources": [
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/layers/quantization/utils/fp8_utils.py",
+                    "first_character_index": 18529,
+                    "last_character_index": 22877
+                }
+            ]
+        },
+        {
+            "question_id": "eea9e938-c8f8-4a7a-b262-66e81e9a0201",
+            "question": "What are all the NVML GPU instance profile constants defined in vLLM's pynvml module?",
+            "retrived_sources": [
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/utils/__init__.py",
+                    "first_character_index": 103500,
+                    "last_character_index": 105045
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/platforms/cuda.py",
+                    "first_character_index": 0,
+                    "last_character_index": 22283
+                }
+            ]
+        },
+        {
+            "question_id": "b9f85113-c988-47ad-993b-01aec1efe22d",
+            "question": "What are the shard_id values used in the stacked_params_mapping for gate_up_proj in vLLM's step3_text model?",
+            "retrived_sources": [
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/layers/linear.py",
+                    "first_character_index": 3208,
+                    "last_character_index": 4136
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/examples/offline_inference/qwen3_reranker.py",
+                    "first_character_index": 0,
+                    "last_character_index": 2031
+                }
+            ]
+        },
+        {
+            "question_id": "5ddbbb60-4372-4ce2-b0a9-64e59803e7e1",
+            "question": "What is the default value of global_num_experts parameter in the forward_xpu method of vLLM's fused MOE layer?",
+            "retrived_sources": [
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/layers/fused_moe/modular_kernel.py",
+                    "first_character_index": 0,
+                    "last_character_index": 1997
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/utils/__init__.py",
+                    "first_character_index": 99851,
+                    "last_character_index": 103497
+                }
+            ]
+        },
+        {
+            "question_id": "4ac3026d-7b4f-4723-9116-7aa546efed71",
+            "question": "What is the default value of the dst parameter in tensor_model_parallel_gather function?",
+            "retrived_sources": [
+                {
+                    "file_path": "data/raw/vllm-0.10.1/tests/kernels/attention/test_encoder_decoder_attn.py",
+                    "first_character_index": 29899,
+                    "last_character_index": 30465
+                }
+            ]
+        },
+        {
+            "question_id": "8b219348-ad43-407d-9b13-46cd8fa2fa1c",
+            "question": "What does the simple_buffer module return when tokens_recver is None in the KV lookup buffer?",
+            "retrived_sources": [
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/distributed/kv_transfer/kv_lookup_buffer/base.py",
+                    "first_character_index": 0,
+                    "last_character_index": 1154
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/distributed/kv_transfer/kv_lookup_buffer/mooncake_store.py",
+                    "first_character_index": 0,
+                    "last_character_index": 867
+                }
+            ]
+        },
+        {
+            "question_id": "f9d7bb96-a32b-4caf-86a0-158a821354c4",
+            "question": "What is the default value of the cutlass_block_fp8_supported parameter in apply_w8a8_block_fp8_linear?",
+            "retrived_sources": [
+                {
+                    "file_path": "data/raw/vllm-0.10.1/tests/kernels/attention/test_encoder_decoder_attn.py",
+                    "first_character_index": 29899,
+                    "last_character_index": 30465
+                }
+            ]
+        },
+        {
+            "question_id": "4d0f06a5-e010-4b6a-bc27-35d2c75eb39f",
+            "question": "What interface should a multimodal model class inherit from in vLLM?",
+            "retrived_sources": [
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/models/interfaces_base.py",
+                    "first_character_index": 0,
+                    "last_character_index": 1630
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/layers/mamba/abstract.py",
+                    "first_character_index": 0,
+                    "last_character_index": 1067
+                }
+            ]
+        },
+        {
+            "question_id": "860c7aac-6520-413c-ac98-19448b34472a",
+            "question": "What method needs to be overridden in BaseProcessingInfo to specify the maximum number of input items for each modality in vLLM multimodal models?",
+            "retrived_sources": [
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/multimodal/inputs.py",
+                    "first_character_index": 1933,
+                    "last_character_index": 3735
+                }
+            ]
+        },
+        {
+            "question_id": "f91d4c7f-8bda-4cdf-8613-fc746027dadd",
+            "question": "How do you serve a model with audio input support in vLLM?",
+            "retrived_sources": [
+                {
+                    "file_path": "data/raw/vllm-0.10.1/examples/online_serving/openai_chat_completion_client_for_multimodal.py",
+                    "first_character_index": 0,
+                    "last_character_index": 1870
+                }
+            ]
+        },
+        {
+            "question_id": "85e0249b-06ff-4e2a-a0fc-336dc1cbe5f8",
+            "question": "What shape must multimodal embeddings have when returned from get_multimodal_embeddings in vLLM multimodal models?",
+            "retrived_sources": [
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/v1/worker/utils.py",
+                    "first_character_index": 5846,
+                    "last_character_index": 7007
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/v1/worker/utils.py",
+                    "first_character_index": 4563,
+                    "last_character_index": 5843
+                }
+            ]
+        },
+        {
+            "question_id": "de8f43f8-80fa-4a17-9fdf-b00040702df8",
+            "question": "What do the symbols \u2705, \ud83d\udea7, and \u26a0\ufe0f mean in vLLM's feature status legend?",
+            "retrived_sources": [
+                {
+                    "file_path": "data/raw/vllm-0.10.1/examples/online_serving/openai_embedding_long_text/client.py",
+                    "first_character_index": 0,
+                    "last_character_index": 1743
+                }
+            ]
+        },
+        {
+            "question_id": "de2f7646-a182-4d9b-8fb0-b9edf7ce47e9",
+            "question": "What is Reinforcement Learning from Human Feedback (RLHF)?",
+            "retrived_sources": [
+                {
+                    "file_path": "data/raw/vllm-0.10.1/examples/offline_inference/rlhf_colocate.py",
+                    "first_character_index": 0,
+                    "last_character_index": 1443
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/examples/offline_inference/rlhf.py",
+                    "first_character_index": 0,
+                    "last_character_index": 1688
+                }
+            ]
+        },
+        {
+            "question_id": "451afbac-b40a-474f-880e-2bb73bd4ce8c",
+            "question": "Which models support the process_vision_info function in vLLM?",
+            "retrived_sources": [
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/attention/backends/flashinfer.py",
+                    "first_character_index": 5600,
+                    "last_character_index": 6535
+                }
+            ]
+        }
+    ],
+    "k": 3
+}
