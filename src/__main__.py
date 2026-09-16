@@ -5,9 +5,11 @@ from chunkers.text import TextChunker
 from models import StudentSearchResults
 from reader import Reader
 from indexer import RagPipeline
+from recall_evaluation import Recall
 import time
 import os
 import json
+
 
 
 reader = Reader("data/raw/vllm-0.10.1")
@@ -23,53 +25,48 @@ all_chunks = []
 start = time.time()
 
 for file in paths:
-    if file.suffix.lower() == ".py":
-        chunks = code_chunker.set_chunks(str(file), max_chunk_size)
-        for chunk in chunks:
-            all_chunks.append(chunk)
+    # if file.suffix.lower() == ".py":
+    #     chunks = code_chunker.set_chunks(str(file), max_chunk_size)
+    #     for chunk in chunks:
+    #         all_chunks.append(chunk)
 
 
-    elif file.suffix.lower() in [".txt", ".md"]:
+    if file.suffix.lower() in [".txt", ".md"]:
         chunks = text_chunker.set_chunks(str(file), max_chunk_size)
         for chunk in chunks:
-            all_chunks.append(chunk)
+            # all_chunks.append(chunk)
+            print(chunk)
 
+exit()
 index = RagPipeline()
 
 index.ingest(all_chunks, "data/processed/indexed_chunks")
 
 # retrival
 index.load("data/processed/indexed_chunks")
+k = 5
+student_search: StudentSearchResults = index.get_search_result("data/datasets_public/public/UnansweredQuestions", k)
 
-student_search: StudentSearchResults = index.get_search_result("data/datasets_public/public/UnansweredQuestions", 3)
+index.save_searching_output(student_search, k)
 
-os.makedirs("data/search_results", exist_ok=True)
+evaluation = Recall()
 
-content = {"search_results": [], "k": 3}
+recalls = 0
+questions_number = 0
 
+with open("data/datasets_public/public/AnsweredQuestions/dataset_docs_public.json", "r") as reference:
+    with open("data/search_results/dataset_docs_public.json", "r") as retrived:
 
-for result in student_search.search_results:
-    sources = []
+        reference_content = json.load(reference)
+        retrived_content = json.load(retrived)
 
-    for source in result.retrieved_sources:
+        questions_number = len(reference_content['rag_questions'])
+        for r_question in reference_content['rag_questions']:
+            for r_result in retrived_content['search_results']:
+                if r_question['question_id'] == r_result['question_id']:
+                    recalls += evaluation.recall_calculation(r_question['sources'], r_result['retrived_sources'])
 
-            sources.append({
-                "file_path": source.file_path,
-                "first_character_index": source.first_character_index,
-                "last_character_index": source.last_character_index
-            })
-
-    content['search_results'].append({
-        "question_id": result.question_id,
-        "question": result.question,
-        "retrived_sources": sources
-    })
-
-      
-
-        
-with open("data/search_results/dataset_docs_public.json", "w") as file:
-    json.dump(content, file, indent=4)
+print(f"{(recalls / questions_number) * 100} %")
 
 
 print(f"time: {time.time() - start}")

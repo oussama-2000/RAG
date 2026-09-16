@@ -57,7 +57,7 @@ class RagPipeline:
         self.tokenized_chunks = data["tokenized_tokens"]
         self.bm25 = BM25Okapi(self.tokenized_chunks)
 
-    def search(self, question, k):
+    def search(self, question, k, storing_file):
         tokenized_query = self.tokenize(question.question)
 
         scores = self.bm25.get_scores(tokenized_query)
@@ -71,10 +71,12 @@ class RagPipeline:
 
             scores[index] = float("-infinity")
 
+        storing_file = Path(storing_file).name
         return MinimalSearchResults(
                 question_id=question.question_id,
                 question=question.question,
-                retrieved_sources=result
+                retrieved_sources=result,
+                storing_file=storing_file
             )
         
 
@@ -86,10 +88,46 @@ class RagPipeline:
         student_results: list[MinimalSearchResults] = []
         for file in datasets:
 
-            with open(str(file), "r") as file:
-                questions = RagDataset(**json.load(file))
+            with open(str(file), "r") as f:
+                questions = RagDataset(**json.load(f))
                 for question in questions.rag_questions:
-                    chunks = self.search(question, k)
+                    chunks = self.search(question, k, str(file))
                     student_results.append(chunks)
 
         return StudentSearchResults(search_results=student_results, k=k)
+
+    def save_searching_output(self, result, k):
+
+        os.makedirs("data/search_results", exist_ok=True)
+
+        content = {}
+
+        for result in result.search_results:
+            sources = []
+
+            for source in result.retrieved_sources:
+
+                    sources.append({
+                        "file_path": source.file_path,
+                        "first_character_index": source.first_character_index,
+                        "last_character_index": source.last_character_index
+                    })
+            try:
+                content[result.storing_file]['search_results'].append({
+                    "question_id": result.question_id,
+                    "question": result.question,
+                    "retrived_sources": sources
+                })
+            except KeyError:
+                content.update({result.storing_file: {'search_results': [{
+                    "question_id": result.question_id,
+                    "question": result.question,
+                    "retrived_sources": sources
+                    }]
+                }})
+            content[result.storing_file]["k"] = k
+
+
+        for file in content.keys():
+            with open(f"data/search_results/{file}", "w") as f:
+                json.dump(content[file], f, indent=4)
