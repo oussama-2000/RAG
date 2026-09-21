@@ -1,5 +1,5 @@
 
-
+import json
 
 class Recall():
 
@@ -41,5 +41,26 @@ class Recall():
 
 
         return correct_retrived / len(reference)
-    
+
+    def evaluate(self, student_search_results_path, dataset_path):
+
+        recalls = 0
+        questions_number = 0
+
+        with open(dataset_path, "r") as reference:
+            with open(student_search_results_path, "r") as retrived:
+
+                reference_content = json.load(reference)
+                retrived_content = json.load(retrived)
+
+                questions_number = len(reference_content['rag_questions'])
+                for r_question in reference_content['rag_questions']:
+                    for r_result in retrived_content['search_results']:
+                        if r_question['question_id'] == r_result['question_id']:
+                            recall = self.recall_calculation(r_question['sources'], r_result['retrieved_sources'])
+                            recalls += recall
+
+        print(f"{(recalls / questions_number) * 100} %")
+
+
         

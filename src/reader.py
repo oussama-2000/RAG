@@ -17,3 +17,6 @@ class Reader:
         for file in files:
             if file.suffix.lower() in self.patterns:
                 self.paths.append(file)
+
+
+        return self.paths

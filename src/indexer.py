@@ -4,31 +4,75 @@ from rank_bm25 import BM25Okapi
 import re
 import pickle
 import numpy
-from models import MinimalSource, MinimalSearchResults, StudentSearchResults, RagDataset, AnsweredQuestion
+from models import MinimalSource, MinimalSearchResults, StudentSearchResults, RagDataset
 from pathlib import Path
 import json
 import os
+from reader import Reader
+from chunkers.code import CodeChunker
+from chunkers.text import TextChunker
 
 
 class RagPipeline:
     def __init__(self):
+        self.reader = Reader("data/raw/vllm-0.10.1")
+        self.code_chunker = CodeChunker()
+        self.text_chunker = TextChunker()
+        self.resurce_paths = []
         self.chunks = []
         self.tokenized_chunks = []
         self.bm25 = None
             
     def tokenize(self, text):
-        return re.split(r'[ ,(){}:\n]', text.lower())
-    
-    def build(self, chunks):
-        self.chunks = chunks
-        chunks_content = [chunk['text'] for chunk in chunks]
+        return re.split(r'[-\s,./;<=>?!_(){}":]+', text.lower())
+
+    def clean_tokenized_chunks(self, chunks):
+
+        cleaned_chunks = []
+
+        for chunk in chunks:
+            cleaned_chunk = []
+
+            for token in chunk:
+                token = token.strip(".,;:!?(){}[]'\"-_")
+
+                if len(token) < 3 or not token:
+                    continue
+                
+                cleaned_chunk.append(token)
+            cleaned_chunks.append(cleaned_chunk)
+
+        return cleaned_chunks
+
+    def chunk(self, max_chunk_size):
+
+        self.resurce_paths = self.reader.read()
+
+        for file in self.resurce_paths:
+            if file.suffix.lower() == ".py":
+                chunks = self.code_chunker.set_chunks(str(file), max_chunk_size)
+                for chunk in chunks:
+                    self.chunks.append(chunk)
+                    
+
+            elif file.suffix.lower() in [".txt", ".md"]:
+                chunks = self.text_chunker.set_chunks(str(file), max_chunk_size)
+                for chunk in chunks:
+                    self.chunks.append(chunk)
+
+
+    def build(self):
+
+        chunks_content = [chunk['text'] for chunk in self.chunks]
 
         tokenized_chunks = [
             self.tokenize(chunk)
             for chunk in chunks_content
         ]
 
-        self.tokenized_chunks = tokenized_chunks
+        
+        self.tokenized_chunks = self.clean_tokenized_chunks(tokenized_chunks) 
+
         self.bm25 = BM25Okapi(tokenized_chunks)
 
     def save(self, path):
@@ -40,12 +84,10 @@ class RagPipeline:
         with open(path, "wb") as file:
             pickle.dump(data, file)
     
-    def is_resources_changed(self):
-        return self.resources_last_modification != os.path.getatime(self.resources_dir_path)
     
-    def ingest(self, chunks, save_file_path):
-            
-        self.build(chunks)
+    def ingest(self, save_file_path, max_chunk_size):
+        self.chunk(max_chunk_size)
+        self.build()
         self.save(save_file_path)
     
     def load(self, path):
@@ -116,13 +158,13 @@ class RagPipeline:
                 content[result.storing_file]['search_results'].append({
                     "question_id": result.question_id,
                     "question": result.question,
-                    "retrived_sources": sources
+                    "retrieved_sources": sources
                 })
             except KeyError:
                 content.update({result.storing_file: {'search_results': [{
                     "question_id": result.question_id,
                     "question": result.question,
-                    "retrived_sources": sources
+                    "retrieved_sources": sources
                     }]
                 }})
             content[result.storing_file]["k"] = k
