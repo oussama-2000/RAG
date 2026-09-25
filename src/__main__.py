@@ -16,10 +16,10 @@ index.ingest("data/processed/indexed_chunks", max_chunk_size)
 
 # retrival
 index.load("data/processed/indexed_chunks")
-k = 5
+k = 1
 student_search: StudentSearchResults = index.get_search_result("data/datasets_public/public/UnansweredQuestions", k)
 
-# index.save_searching_output(student_search, k)
+index.save_searching_output(student_search, k)
 
 # evaluation = Recall()
 
@@ -36,25 +36,22 @@ for result in student_search.search_results:
     resources.append([source.text for source in result.retrieved_sources])
     i += 1
 
-qeustion = "Where can I find vLLM setup and installation instructions for Google TPU?"
-print(
+qeustion = "What HTTP endpoint is used to dynamically load a LoRA adapter in vLLM?"
+print("====>",
     test(
         f"""
-            you are given a list of resources.
-            you are given a question.
-            
-            answer the question from the resources lis.
+            you are a system that takes resources and question as a inputs, and you should answer the question from the provided resourced only.
 
-            resources:
+            Resources:
             {{{resources}}}
 
-            #Task:
+            Qeustion:
             {{{qeustion}}}
 
             #Answer:
 
         """,
-        max_new_tokens=40,
+        max_new_tokens=100,
         do_sample=False,
         return_full_text=False
     )[0]['generated_text']

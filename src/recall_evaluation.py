@@ -57,7 +57,9 @@ class Recall():
                 for r_question in reference_content['rag_questions']:
                     for r_result in retrived_content['search_results']:
                         if r_question['question_id'] == r_result['question_id']:
+                            
                             recall = self.recall_calculation(r_question['sources'], r_result['retrieved_sources'])
+
                             recalls += recall
 
         print(f"{(recalls / questions_number) * 100} %")

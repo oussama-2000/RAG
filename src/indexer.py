@@ -158,7 +158,7 @@ class RagPipeline:
                 content[result.storing_file]['search_results'].append({
                     "question_id": result.question_id,
                     "question": result.question,
-                    "retrieved_sources": sources
+                    "retrieved_sources": sources,
                 })
             except KeyError:
                 content.update({result.storing_file: {'search_results': [{
