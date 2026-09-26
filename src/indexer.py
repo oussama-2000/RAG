@@ -4,13 +4,13 @@ from rank_bm25 import BM25Okapi
 import re
 import pickle
 import numpy
-from models import MinimalSource, MinimalSearchResults, StudentSearchResults, RagDataset
+from .models import MinimalSource, MinimalSearchResults, StudentSearchResults, RagDataset
 from pathlib import Path
 import json
 import os
-from reader import Reader
-from chunkers.code import CodeChunker
-from chunkers.text import TextChunker
+from .reader import Reader
+from .chunkers.code import CodeChunker
+from .chunkers.text import TextChunker
 
 
 class RagPipeline:
@@ -78,19 +78,19 @@ class RagPipeline:
     def save(self, path):
         data  = {
             "chunks": [MinimalSource(**chunk) for chunk in self.chunks],
-            "tokenized_tokens": self.tokenized_chunks,
+            "tokenized_tokens": self.tokenized_chunks
         }
 
         with open(path, "wb") as file:
             pickle.dump(data, file)
     
     
-    def ingest(self, save_file_path, max_chunk_size):
+    def ingest(self, max_chunk_size):
         self.chunk(max_chunk_size)
         self.build()
-        self.save(save_file_path)
+        self.save("data/processed/indexed_chunks")
     
-    def load(self, path):
+    def load(self, path="data/processed/indexed_chunks"):
 
         with open(path, "rb") as file:
             data = pickle.load(file)
@@ -99,8 +99,12 @@ class RagPipeline:
         self.tokenized_chunks = data["tokenized_tokens"]
         self.bm25 = BM25Okapi(self.tokenized_chunks)
 
-    def search(self, question, k, storing_file):
-        tokenized_query = self.tokenize(question.question)
+    def search(self, question, k, storing_file="data/search_results/single_question_result.json", single=False):
+        if single:
+            tokenized_query = self.tokenize(question)
+
+        else:
+            tokenized_query = self.tokenize(question.question)
 
         scores = self.bm25.get_scores(tokenized_query)
         
@@ -113,6 +117,9 @@ class RagPipeline:
 
             scores[index] = float("-infinity")
 
+        if single:
+            return result
+        
         storing_file = Path(storing_file).name
         return MinimalSearchResults(
                 question_id=question.question_id,
@@ -122,9 +129,9 @@ class RagPipeline:
             )
         
 
-    def get_search_result(self, datasets_path, k):
+    def get_search_result(self, dataset_path, k):
 
-        dataset_folder = Path(datasets_path)
+        dataset_folder = Path(dataset_path)
         datasets = dataset_folder.rglob("*.json")
 
         student_results: list[MinimalSearchResults] = []
@@ -138,9 +145,9 @@ class RagPipeline:
 
         return StudentSearchResults(search_results=student_results, k=k)
 
-    def save_searching_output(self, result, k):
+    def save_searching_output(self, result,k, save_directory="data/search_results"):
 
-        os.makedirs("data/search_results", exist_ok=True)
+        os.makedirs(save_directory, exist_ok=True)
 
         content = {}
 
@@ -152,7 +159,8 @@ class RagPipeline:
                     sources.append({
                         "file_path": source.file_path,
                         "first_character_index": source.first_character_index,
-                        "last_character_index": source.last_character_index
+                        "last_character_index": source.last_character_index,
+                        "text": source.text
                     })
             try:
                 content[result.storing_file]['search_results'].append({
@@ -171,5 +179,5 @@ class RagPipeline:
 
 
         for file in content.keys():
-            with open(f"data/search_results/{file}", "w") as f:
+            with open(f"{save_directory}/{file}", "w") as f:
                 json.dump(content[file], f, indent=4)
