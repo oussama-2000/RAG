@@ -1,2 +1,5 @@
 .venv
 vllm-0.10.1
+.uv_cache
+.hf_cache
+search_results
