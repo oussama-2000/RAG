@@ -1,0 +1,7 @@
+{
+    "search_results": [
+        "<think>\n\n</think>\n\nThe HTTP endpoint used to dynamically load a LoRA adapter in vLLM is `/v1/load_lora_adapter`.",
+        "<think>\nOkay, let's see. The user is asking which command can be used to evaluate the accuracy of a quantized model using lm_eval with vLLM.\n\nLooking at the provided context, there's a mention of using lm_eval for evaluation. The context includes code snippets where they set up the model with quantization and then run lm_eval. \n\nIn the code, after loading the model, they use lm_eval to evaluate the model. The example command given is something like `lm_eval --model vllm`. Also, there's a part where they show how to run lm_eval with the model arguments. \n\nThe key part here is the line `lm_eval --model vllm ...` which is the command to run lm_eval with the model. The user wants to know the command for evaluating accuracy, so the answer should be similar. \n\nI need to check if there's any other commands mentioned. The context also includes the part about using `lm_eval` with `add_bos_token=True` to avoid issues with the `bos` token. But the main command is still the one provided. \n\nSo the answer should be the command that uses `lm_eval` with the model name and other parameters as specified in the code.\n</think>\n\nThe"
+    ],
+    "k": 2
+}

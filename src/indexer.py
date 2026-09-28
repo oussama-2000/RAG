@@ -11,7 +11,7 @@ import os
 from .reader import Reader
 from .chunkers.code import CodeChunker
 from .chunkers.text import TextChunker
-
+from tqdm import tqdm
 
 class RagPipeline:
     def __init__(self):
@@ -48,7 +48,7 @@ class RagPipeline:
 
         self.resurce_paths = self.reader.read()
 
-        for file in self.resurce_paths:
+        for file in tqdm(self.resurce_paths, desc=f"chunking resources into chunks with size {max_chunk_size}"):
             if file.suffix.lower() == ".py":
                 chunks = self.code_chunker.set_chunks(str(file), max_chunk_size)
                 for chunk in chunks:
@@ -91,6 +91,7 @@ class RagPipeline:
         self.save("data/processed/indexed_chunks")
     
     def load(self, path="data/processed/indexed_chunks"):
+        print("loading data from disk ...")
 
         with open(path, "rb") as file:
             data = pickle.load(file)
@@ -109,13 +110,22 @@ class RagPipeline:
         scores = self.bm25.get_scores(tokenized_query)
         
         result = []
-        for _ in range(min(k, len(self.chunks))):
-            
-            index = numpy.argmax(scores)
+        if single:
+            for _ in tqdm(range(min(k, len(self.chunks))), desc=f"querying data '{question}'"):
+                
+                index = numpy.argmax(scores)
 
-            result.append(self.chunks[index])
+                result.append(self.chunks[index])
 
-            scores[index] = float("-infinity")
+                scores[index] = float("-infinity")
+        else:
+            for _ in range(min(k, len(self.chunks))):
+                
+                index = numpy.argmax(scores)
+
+                result.append(self.chunks[index])
+
+                scores[index] = float("-infinity")
 
         if single:
             return result
@@ -139,7 +149,7 @@ class RagPipeline:
 
             with open(str(file), "r") as f:
                 questions = RagDataset(**json.load(f))
-                for question in questions.rag_questions:
+                for question in tqdm(questions.rag_questions, desc=f"querying data with questions from '{dataset_path}'"):
                     chunks = self.search(question, k, str(file))
                     student_results.append(chunks)
 
@@ -151,7 +161,7 @@ class RagPipeline:
 
         content = {}
 
-        for result in result.search_results:
+        for result in tqdm(result.search_results, desc=f"saving search results into {save_directory}"):
             sources = []
 
             for source in result.retrieved_sources:
