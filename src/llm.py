@@ -1,6 +1,6 @@
 from transformers import pipeline
-# from transformers.utils.logging import set_verbosity_error
-# set_verbosity_error()
+from transformers.utils.logging import set_verbosity_error
+set_verbosity_error()
 import os
 from .models import MinimalAnswer
 

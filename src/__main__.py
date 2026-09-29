@@ -59,7 +59,7 @@ class CLI:
             search_results = json.load(file)['search_results']
             k = 0
 
-            for result in search_results:
+            for result in tqdm(search_results, desc=f"answering results from {student_search_results_path}"):
                 question = result['question']
                 sources = [source['text'] for source in result['retrieved_sources']]
 
@@ -72,12 +72,15 @@ class CLI:
         with open(save_directory, "w") as file:
             json.dump(search_results_answer, file, indent=4)
 
-
+        print(f"dataset answers saved int {save_directory}")
 
     def evaluate(self, student_search_results_path: str, dataset_path: str):
         evaluation = Recall()
 
-        evaluation.evaluate(student_search_results_path, dataset_path)
+        evaluation.evaluate(student_search_results_path, dataset_path, at=1)
+        evaluation.evaluate(student_search_results_path, dataset_path, at=3)
+        evaluation.evaluate(student_search_results_path, dataset_path, at=5)
+        evaluation.evaluate(student_search_results_path, dataset_path, at=10)
 
 
 if __name__ == "__main__":

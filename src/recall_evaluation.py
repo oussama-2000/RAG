@@ -23,14 +23,14 @@ class Recall():
         return intersection / union if union > 0 else 0
 
     
-    def recall_calculation(self, reference, retrived):
+    def recall_calculation(self, reference, retrived, at):
 
         # recall = reference source found  / reference source number
 
         correct_retrived = 0
         for ref in reference:
             
-            for ret in retrived:
+            for ret in retrived[:min(at, len(retrived))]:
 
                 if ref['file_path'] != ret['file_path']:
                     continue
@@ -42,7 +42,7 @@ class Recall():
 
         return correct_retrived / len(reference)
 
-    def evaluate(self, student_search_results_path, dataset_path):
+    def evaluate(self, student_search_results_path, dataset_path, at):
 
         recalls = 0
         questions_number = 0
@@ -58,11 +58,11 @@ class Recall():
                     for r_result in retrived_content['search_results']:
                         if r_question['question_id'] == r_result['question_id']:
                             
-                            recall = self.recall_calculation(r_question['sources'], r_result['retrieved_sources'])
+                            recall = self.recall_calculation(r_question['sources'], r_result['retrieved_sources'], at)
 
                             recalls += recall
 
-        print(f"{(recalls / questions_number) * 100} %")
+        print(f"Recall@{at}: {(recalls / questions_number) * 100} %")
 
 
         
