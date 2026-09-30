@@ -26,6 +26,7 @@ class RagPipeline:
     def tokenize(self, text):
         return re.split(r'[-\s,./;<=>?!_(){}":]+', text.lower())
 
+
     def clean_tokenized_chunks(self, chunks):
 
         cleaned_chunks = []
@@ -41,22 +42,25 @@ class RagPipeline:
                 
                 cleaned_chunk.append(token)
             cleaned_chunks.append(cleaned_chunk)
-
         return cleaned_chunks
+
 
     def chunk(self, max_chunk_size):
 
         self.resurce_paths = self.reader.read()
 
+        # for file in files:
+        #   if file changed:
+        #   chunks.update(file.chunks)
+
         for file in tqdm(self.resurce_paths, desc=f"chunking resources into chunks with size {max_chunk_size}"):
             if file.suffix.lower() == ".py":
-                chunks = self.code_chunker.set_chunks(str(file), max_chunk_size)
+                chunks = self.code_chunker.extract_chunks(str(file), max_chunk_size)
                 for chunk in chunks:
                     self.chunks.append(chunk)
                     
-
             elif file.suffix.lower() in [".txt", ".md"]:
-                chunks = self.text_chunker.set_chunks(str(file), max_chunk_size)
+                chunks = self.text_chunker.extract_chunks(str(file), max_chunk_size)
                 for chunk in chunks:
                     self.chunks.append(chunk)
 
@@ -69,11 +73,9 @@ class RagPipeline:
             self.tokenize(chunk)
             for chunk in chunks_content
         ]
-
-        
         self.tokenized_chunks = self.clean_tokenized_chunks(tokenized_chunks) 
-
         self.bm25 = BM25Okapi(tokenized_chunks)
+
 
     def save(self, path):
         data  = {
@@ -89,6 +91,7 @@ class RagPipeline:
         self.chunk(max_chunk_size)
         self.build()
         self.save("data/processed/indexed_chunks")
+
     
     def load(self, path="data/processed/indexed_chunks"):
         print("loading data from disk ...")
@@ -99,6 +102,7 @@ class RagPipeline:
         self.chunks = data["chunks"]
         self.tokenized_chunks = data["tokenized_tokens"]
         self.bm25 = BM25Okapi(self.tokenized_chunks)
+
 
     def search(self, question, k, storing_file="data/search_results/single_question_result.json", single=False):
         if single:
@@ -155,6 +159,7 @@ class RagPipeline:
 
         return StudentSearchResults(search_results=student_results, k=k)
 
+
     def save_searching_output(self, result,k, save_directory="data/search_results"):
 
         os.makedirs(save_directory, exist_ok=True)
@@ -186,7 +191,6 @@ class RagPipeline:
                     }]
                 }})
             content[result.storing_file]["k"] = k
-
 
         for file in content.keys():
             with open(f"{save_directory}/{file}", "w") as f:

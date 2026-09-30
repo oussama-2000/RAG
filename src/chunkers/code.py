@@ -11,28 +11,27 @@ tree_sitter_python: python grammar for tree_sitter
 class CodeChunker:
 
     def __init__(self):
-        self.file = None
-        self.max_chunk_size = 0
         self.python_language = Language(tree_sitter_python.language())
         self.parser = Parser(self.python_language)
         self.source = None
         self.tree = None
         self.root = None
 
-    def set_tree(self):
+    def set_tree(self, file_path):
 
-        with open(self.file, "r", encoding="utf-8") as file:
+        with open(file_path, "r", encoding="utf-8") as file:
             source = file.read()
 
         self.source = source.encode("utf-8")
         self.tree = self.parser.parse(self.source)
         self.root = self.tree.root_node
 
+
     def byte_to_char_index(self, source, byte_index):
         return len(source[:byte_index].decode("utf-8"))
 
-    def set_nodes(self, node, level):
 
+    def extract_nodes(self, node, max_chunk_size):
         nodes = []
 
         for child in node.named_children:
@@ -40,7 +39,7 @@ class CodeChunker:
             text = self.source[child.start_byte:child.end_byte].decode("utf-8")
             size = len(text)
 
-            if size <= self.max_chunk_size:
+            if size <= max_chunk_size:
 
                 start = self.byte_to_char_index(
                     self.source,
@@ -55,9 +54,6 @@ class CodeChunker:
                 nodes.append(
                     {
                         "size": size,
-                        "level": level,
-                        "type": child.type,
-                        "file_path": self.file,
                         "first_character_index": start,
                         "last_character_index": end,
                         "text": text
@@ -66,20 +62,18 @@ class CodeChunker:
 
             else:
                 nodes.extend(
-                    self.set_nodes(child, level + 1)
+                    self.extract_nodes(child, max_chunk_size)
                 )
 
         return nodes
 
-    def set_chunks(self, file_path, max_chunk_size):
 
-        self.file = file_path
-        self.max_chunk_size = max_chunk_size
+    def extract_chunks(self, file_path, max_chunk_size):
 
-        self.set_tree()
+        self.set_tree(file_path)
 
-        nodes = self.set_nodes(self.root, 0)
-
+        nodes = self.extract_nodes(self.root, max_chunk_size)
+    
         i = 0
 
         while i < len(nodes):
@@ -92,28 +86,28 @@ class CodeChunker:
             first_index = first_node["first_character_index"]
             last_index = first_node["last_character_index"]
 
+
             j = i + 1
 
             while j < len(nodes):
 
                 next_node = nodes[j]
 
-                new_size = size + next_node["size"]
+                new_size = next_node['last_character_index'] - first_index
 
-                if new_size > self.max_chunk_size:
+                if new_size > max_chunk_size - 1:
                     break
 
-
-                text += "\n" + next_node["text"]
+                text += " " + next_node["text"]
 
                 size = new_size
                 last_index = next_node["last_character_index"]
 
                 j += 1
-
+            
             yield {
                 "size": size,
-                "file_path": self.file,
+                "file_path": file_path,
                 "first_character_index": first_index,
                 "last_character_index": last_index,
                 "text": text

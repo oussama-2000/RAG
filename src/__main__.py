@@ -20,12 +20,14 @@ class CLI:
         self.indexer.ingest(max_chunk_size)
         print("indexing is done and saved into 'data/processed/indexed_chunks' .")
 
+
     def search(self, query: str, k: int):
         
         self.indexer.load()
         search_result: str = self.indexer.search(query, k, single=True)
         print("search is done.")
         print(search_result)
+
 
     def search_dataset(self, dataset_path: str, k: int, save_directory: str):
 
@@ -44,6 +46,7 @@ class CLI:
         llm = LLM()
         answer: MinimalAnswer = llm.answer(query, sources)
         print(answer)
+
 
     def answer_dataset(self, student_search_results_path: str, save_directory: str):
         from .llm import LLM
@@ -73,6 +76,7 @@ class CLI:
             json.dump(search_results_answer, file, indent=4)
 
         print(f"dataset answers saved int {save_directory}")
+
 
     def evaluate(self, student_search_results_path: str, dataset_path: str):
         evaluation = Recall()

@@ -11,7 +11,6 @@ class Reader:
         self.paths = []
 
     def read(self):
-
         files = self.base_dir.rglob("*")
 
         for file in files:

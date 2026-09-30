@@ -38,9 +38,8 @@ class Recall():
                     correct_retrived += 1
                     break
 
-
-
         return correct_retrived / len(reference)
+
 
     def evaluate(self, student_search_results_path, dataset_path, at):
 

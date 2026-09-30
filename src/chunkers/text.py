@@ -1,9 +1,7 @@
 
 class TextChunker:
-    def __init__(self):
-        pass
 
-    def set_chunks(self, file_path, max_chunk_size):
+    def extract_chunks(self, file_path, max_chunk_size):
 
 
         with open(file_path, encoding="utf-8") as file:
