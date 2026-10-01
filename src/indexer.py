@@ -22,6 +22,7 @@ class RagPipeline:
         self.chunks = {} # [{"file_path": chunks}]
         self.tokenized_chunks = []
         self.bm25 = None
+        self.max_chunk_size = 0
             
     def tokenize(self, text):
         return re.split(r'[-\s,./;<=>?!_(){}":]+', text.lower())
@@ -45,7 +46,7 @@ class RagPipeline:
         return cleaned_chunks
 
 
-    def chunk(self, max_chunk_size):
+    def chunk(self):
 
         self.resurce_paths = self.reader.read()
         chunks_exist = True # if the chunks file exists/empty or not
@@ -59,36 +60,42 @@ class RagPipeline:
             with open("data/processed/indexed_chunks", "rb") as file:
                 data = pickle.load(file)
 
-                self.chunks = {
+                if data['max_chunk_size'] != self.max_chunk_size:
+                    self.chunks = {}
+                    raise EOFError
+                    # when the chunk size changed we should reset our chunks stock variable 
+                else:
+                    self.chunks = {
 
-                    f"{chunk.file_path}{chunk.first_character_index}" :
-                        {
-                            'file_path': chunk.file_path,
-                            'first_character_index': chunk.first_character_index,
-                            'last_character_index': chunk.last_character_index,
-                            'text': chunk.text
-                        }
-                    for chunk in data['chunks']
-                }
+                        f"{chunk.file_path}{chunk.first_character_index}" :
+                            {
+                                'file_path': chunk.file_path,
+                                'first_character_index': chunk.first_character_index,
+                                'last_character_index': chunk.last_character_index,
+                                'text': chunk.text
+                            }
+                        for chunk in data['chunks']
+                    }
                 self.resurce_paths = list(data['files'].keys())
 
         except FileNotFoundError, EOFError:
             chunks_exist = False
 
-        for file in tqdm(self.resurce_paths, desc=f"chunking resources into chunks with size {max_chunk_size}"):
-            if chunks_exist and os.path.getctime(file) == data['files'][file]:
-                continue
+        for file in tqdm(self.resurce_paths, desc=f"chunking resources into chunks with size {self.max_chunk_size}"):
+            if chunks_exist:
+                if os.path.getctime(file) == data['files'][file]:
+                    continue
 
             if file.suffix.lower() == ".py":
-                chunks = self.code_chunker.extract_chunks(str(file), max_chunk_size)
+                chunks = self.code_chunker.extract_chunks(str(file), self.max_chunk_size)
                 for chunk in chunks:
                     self.chunks.update({f"{file}{chunk['first_character_index']}" : chunk})
       
             elif file.suffix.lower() in [".txt", ".md"]:
-                chunks = self.text_chunker.extract_chunks(str(file), max_chunk_size)
+                chunks = self.text_chunker.extract_chunks(str(file), self.max_chunk_size)
                 for chunk in chunks:
                     self.chunks.update({f"{file}{chunk['first_character_index']}" : chunk})
- 
+
 
     def build(self):
 
@@ -108,7 +115,8 @@ class RagPipeline:
                 path: os.path.getctime(path) for path in self.resurce_paths
             },
             "chunks": [MinimalSource(**chunk) for chunk in self.chunks.values()],
-            "tokenized_tokens": self.tokenized_chunks
+            "tokenized_tokens": self.tokenized_chunks,
+            "max_chunk_size": self.max_chunk_size
         }
 
         with open(path, "wb") as file:
@@ -116,7 +124,8 @@ class RagPipeline:
     
     
     def ingest(self, max_chunk_size):
-        self.chunk(max_chunk_size)
+        self.max_chunk_size = max_chunk_size
+        self.chunk()
         self.build()
         self.save("data/processed/indexed_chunks")
 
