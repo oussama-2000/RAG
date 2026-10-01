@@ -2,4 +2,5 @@
 vllm-0.10.1
 .uv_cache
 .hf_cache
+processed
 search_results
