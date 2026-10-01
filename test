@@ -1,7 +1,17 @@
 {
-    "search_results": [
-        "The HTTP endpoint used to dynamically load a LoRA adapter in vLLM is `/v1/load_lora_adapter`.",
-        "I do not know."
+    "files": {
+        "path1": 12231122,
+        "path2": 6894040
+    },
+    "chunks": [
+        "chunk1",
+        "chunk2"
     ],
-    "k": 2
+    "tokens":[
+        "token1",
+        "token2"
+    ]
 }
+
+[{chunks}]
+[{"file_path": chunks}]

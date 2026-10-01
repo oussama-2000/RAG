@@ -19,7 +19,7 @@ class RagPipeline:
         self.code_chunker = CodeChunker()
         self.text_chunker = TextChunker()
         self.resurce_paths = []
-        self.chunks = []
+        self.chunks = {} # [{"file_path": chunks}]
         self.tokenized_chunks = []
         self.bm25 = None
             
@@ -48,26 +48,51 @@ class RagPipeline:
     def chunk(self, max_chunk_size):
 
         self.resurce_paths = self.reader.read()
+        chunks_exist = True # if the chunks file exists/empty or not
 
-        # for file in files:
-        #   if file changed:
-        #   chunks.update(file.chunks)
+        # we should read the indexed files first to get the chunks and sources_path
+        # then we check if the any file changed or not
+        # if yes we update that file chunks with the new reading chunks
+        # else we skip none changed files
+
+        try:
+            with open("data/processed/indexed_chunks", "rb") as file:
+                data = pickle.load(file)
+
+                self.chunks = {
+
+                    f"{chunk.file_path}{chunk.first_character_index}" :
+                        {
+                            'file_path': chunk.file_path,
+                            'first_character_index': chunk.first_character_index,
+                            'last_character_index': chunk.last_character_index,
+                            'text': chunk.text
+                        }
+                    for chunk in data['chunks']
+                }
+                self.resurce_paths = list(data['files'].keys())
+
+        except FileNotFoundError, EOFError:
+            chunks_exist = False
 
         for file in tqdm(self.resurce_paths, desc=f"chunking resources into chunks with size {max_chunk_size}"):
+            if chunks_exist and os.path.getctime(file) == data['files'][file]:
+                continue
+
             if file.suffix.lower() == ".py":
                 chunks = self.code_chunker.extract_chunks(str(file), max_chunk_size)
                 for chunk in chunks:
-                    self.chunks.append(chunk)
-                    
+                    self.chunks.update({f"{file}{chunk['first_character_index']}" : chunk})
+      
             elif file.suffix.lower() in [".txt", ".md"]:
                 chunks = self.text_chunker.extract_chunks(str(file), max_chunk_size)
                 for chunk in chunks:
-                    self.chunks.append(chunk)
-
+                    self.chunks.update({f"{file}{chunk['first_character_index']}" : chunk})
+ 
 
     def build(self):
 
-        chunks_content = [chunk['text'] for chunk in self.chunks]
+        chunks_content = [chunk['text'] for chunk in self.chunks.values()]
 
         tokenized_chunks = [
             self.tokenize(chunk)
@@ -79,7 +104,10 @@ class RagPipeline:
 
     def save(self, path):
         data  = {
-            "chunks": [MinimalSource(**chunk) for chunk in self.chunks],
+            "files": {
+                path: os.path.getctime(path) for path in self.resurce_paths
+            },
+            "chunks": [MinimalSource(**chunk) for chunk in self.chunks.values()],
             "tokenized_tokens": self.tokenized_chunks
         }
 
@@ -99,7 +127,16 @@ class RagPipeline:
         with open(path, "rb") as file:
             data = pickle.load(file)
 
-        self.chunks = data["chunks"]
+        self.chunks = {
+            f"{chunk.file_path}{chunk.first_character_index}" :
+                {
+                    'file_path': chunk.file_path,
+                    'first_character_index': chunk.first_character_index,
+                    'last_character_index': chunk.last_character_index,
+                    'text': chunk.text
+                }
+            for chunk in data['chunks']
+        }
         self.tokenized_chunks = data["tokenized_tokens"]
         self.bm25 = BM25Okapi(self.tokenized_chunks)
 
@@ -119,7 +156,7 @@ class RagPipeline:
                 
                 index = numpy.argmax(scores)
 
-                result.append(self.chunks[index])
+                result.append(list(self.chunks.values())[index])
 
                 scores[index] = float("-infinity")
         else:
@@ -127,7 +164,7 @@ class RagPipeline:
                 
                 index = numpy.argmax(scores)
 
-                result.append(self.chunks[index])
+                result.append(list(self.chunks.values())[index])
 
                 scores[index] = float("-infinity")
 
