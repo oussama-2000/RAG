@@ -151,36 +151,79 @@ class RagPipeline:
 
 
     def search(self, question, k, storing_file="data/search_results/single_question_result.json", single=False):
-        if single:
-            tokenized_query = self.tokenize(question)
+        storing_file = Path(storing_file).name
 
-        else:
-            tokenized_query = self.tokenize(question.question)
+        # check cache existing first
+        cache_file = "data/query_cache.json"
+        cache_existing = Path(cache_file).exists()
+
+        if not cache_existing:
+            with open(cache_file, "w"):
+                pass
+        question_cache_key = f"{question.lower().strip()}{k}" if single else f"{question.question.lower().strip()}{k}"
+
+        try:
+            with open(cache_file, "r") as cache:
+                data = json.load(cache)
+                if question_cache_key in data.keys():
+                    print("the question already exists in cache")
+                    if single:
+                        return data[question_cache_key]
+                    else:
+                        return ( 
+                                MinimalSearchResults(
+                                    question_id= question.question_id,
+                                    question= question.question,
+                                    retrieved_sources= data[question_cache_key]['retrieved_sources'],
+                                    storing_file= storing_file
+                                )
+                            )
+
+        except json.decoder.JSONDecodeError:
+            pass
+
+        tokenized_query = self.tokenize(question if single else question.question)
 
         scores = self.bm25.get_scores(tokenized_query)
         
         result = []
-        if single:
-            for _ in tqdm(range(min(k, len(self.chunks))), desc=f"querying data '{question}'"):
-                
-                index = numpy.argmax(scores)
+        for _ in tqdm(range(min(k, len(self.chunks))), desc=f"querying data '{question}'") if single else range(min(k, len(self.chunks))):
+            
+            index = numpy.argmax(scores)
 
-                result.append(list(self.chunks.values())[index])
+            result.append(list(self.chunks.values())[index])
 
-                scores[index] = float("-infinity")
-        else:
-            for _ in range(min(k, len(self.chunks))):
-                
-                index = numpy.argmax(scores)
+            scores[index] = float("-infinity")
 
-                result.append(list(self.chunks.values())[index])
+        
+            
+        with open(cache_file, "r+") as cache:
+            try:
+                # data = pickle.load(cache)
+                data = json.load(cache)
+            except EOFError, json.decoder.JSONDecodeError: # if the file is empty
+                data = {}
 
-                scores[index] = float("-infinity")
+            if single:
+                data.update({question_cache_key: result})
+            else:
+                data.update({
+                    question_cache_key: {
+                        "question_id": question.question_id,
+                        "question": question.question,
+                        "retrieved_sources": result,
+                        "storing_file": storing_file
+                    }
+                })
+            cache.seek(0) # reset the reading pointer
+            cache.truncate() # clear the file
+            # pickle.dump(data, cache)
+            json.dump(data, cache, indent=4)
 
+  
         if single:
             return result
-        
-        storing_file = Path(storing_file).name
+
         return MinimalSearchResults(
                 question_id=question.question_id,
                 question=question.question,
