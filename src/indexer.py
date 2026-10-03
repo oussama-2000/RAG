@@ -150,8 +150,7 @@ class RagPipeline:
         self.bm25 = BM25Okapi(self.tokenized_chunks)
 
 
-    def search(self, question, k, storing_file="data/search_results/single_question_result.json", single=False):
-        storing_file = Path(storing_file).name
+    def check_cache_single_q(self, question, k):
 
         # check cache existing first
         cache_file = "data/query_cache.json"
@@ -159,28 +158,24 @@ class RagPipeline:
 
         if not cache_existing:
             with open(cache_file, "w"):
-                pass
-        question_cache_key = f"{question.lower().strip()}{k}" if single else f"{question.question.lower().strip()}{k}"
-
+                return False
+            
+        question_cache_key = f"{question.lower().strip()}{k}"
         try:
             with open(cache_file, "r") as cache:
                 data = json.load(cache)
                 if question_cache_key in data.keys():
                     print("the question already exists in cache")
-                    if single:
-                        return data[question_cache_key]
-                    else:
-                        return ( 
-                                MinimalSearchResults(
-                                    question_id= question.question_id,
-                                    question= question.question,
-                                    retrieved_sources= data[question_cache_key]['retrieved_sources'],
-                                    storing_file= storing_file
-                                )
-                            )
-
+                    return data[question_cache_key]
+                
         except json.decoder.JSONDecodeError:
             pass
+
+        return False
+
+
+    def search(self, question, k, storing_file="data/search_results/single_question_result.json", single=False):
+        storing_file = Path(storing_file).name
 
         tokenized_query = self.tokenize(question if single else question.question)
 
@@ -195,8 +190,15 @@ class RagPipeline:
 
             scores[index] = float("-infinity")
 
+        # cache the question results
+        cache_file = "data/query_cache.json"
+        cache_existing = Path(cache_file).exists()
+
+        if not cache_existing:
+            with open(cache_file, "w"):
+                pass
+        question_cache_key = f"{question.lower().strip()}{k}" if single else f"{question.question.lower().strip()}{k}"
         
-            
         with open(cache_file, "r+") as cache:
             try:
                 # data = pickle.load(cache)
@@ -219,7 +221,7 @@ class RagPipeline:
             cache.truncate() # clear the file
             # pickle.dump(data, cache)
             json.dump(data, cache, indent=4)
-
+        ####
   
         if single:
             return result
@@ -234,17 +236,33 @@ class RagPipeline:
 
     def get_search_result(self, dataset_path, k):
 
+        cache_file = "data/query_cache.json"
+        cache_data = {}
+    
+        try:
+            with open(cache_file, "r") as cache:
+                cache_data = json.load(cache)           
+        except FileNotFoundError, json.decoder.JSONDecodeError:
+            pass
+    
         dataset_folder = Path(dataset_path)
         datasets = dataset_folder.rglob("*.json")
 
         student_results: list[MinimalSearchResults] = []
+        
         for file in datasets:
 
             with open(str(file), "r") as f:
                 questions = RagDataset(**json.load(f))
+
                 for question in tqdm(questions.rag_questions, desc=f"querying data with questions from '{dataset_path}'"):
-                    chunks = self.search(question, k, str(file))
-                    student_results.append(chunks)
+                    question_cache_key = f"{question.question.lower().strip()}{k}"
+
+                    if question_cache_key in cache_data.keys():
+                        student_results.append(cache_data[question_cache_key])
+                    else:
+                        chunks = self.search(question, k, str(file))
+                        student_results.append(chunks)
 
         return StudentSearchResults(search_results=student_results, k=k)
 

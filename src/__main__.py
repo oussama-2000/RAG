@@ -1,15 +1,13 @@
 """CLI entry point"""
 
-from .chunkers.code import CodeChunker
-from .chunkers.text import TextChunker
 from .models import StudentSearchResults, StudentSearchResultsAndAnswer, MinimalAnswer
 from .reader import Reader
 from .indexer import RagPipeline
 from .recall_evaluation import Recall
 import fire
 import json
-import os
 from tqdm import tqdm
+import os
 
 
 class CLI:
@@ -22,9 +20,11 @@ class CLI:
 
 
     def search(self, query: str, k: int):
+        search_result = self.indexer.check_cache_single_q(query, k)
+        if not search_result:
+            self.indexer.load()
+            search_result: str = self.indexer.search(query, k, single=True)
         
-        self.indexer.load()
-        search_result: str = self.indexer.search(query, k, single=True)
         print("search is done.")
         print(search_result)
 
@@ -39,8 +39,7 @@ class CLI:
     def answer(self, query: str, k: int):
         self.indexer.load()
         search_results = self.indexer.search(query, k, single=True)
-
-        sources = [source for source in search_results]
+        sources = [source['text'] for source in search_results]
 
         from .llm import LLM
         llm = LLM()
@@ -60,19 +59,22 @@ class CLI:
 
         with open(student_search_results_path, "r") as file:
             search_results = json.load(file)['search_results']
+
             k = 0
 
             for result in tqdm(search_results, desc=f"answering results from {student_search_results_path}"):
                 question = result['question']
                 sources = [source['text'] for source in result['retrieved_sources']]
-
                 answers.append(llm.answer(question, sources))
+
                 k += 1
 
         search_results_answer['search_results'] = answers
         search_results_answer['k'] = k
 
-        with open(save_directory, "w") as file:
+        os.makedirs(save_directory, exist_ok=True)
+
+        with open("answer_results.json", "w") as file:
             json.dump(search_results_answer, file, indent=4)
 
         print(f"dataset answers saved int {save_directory}")

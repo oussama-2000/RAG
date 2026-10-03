@@ -1,17 +1,7 @@
 {
-    "files": {
-        "path1": 12231122,
-        "path2": 6894040
-    },
-    "chunks": [
-        "chunk1",
-        "chunk2"
+    "search_results": [
+        "The HTTP endpoint used to dynamically load a LoRA adapter in vLLM is `/v1/load_lora_adapter`.",
+        "The command to evaluate the accuracy of a quantized model using lm_eval with vLLM is `lm_eval`."
     ],
-    "tokens":[
-        "token1",
-        "token2"
-    ]
+    "k": 2
 }
-
-[{chunks}]
-[{"file_path": chunks}]
