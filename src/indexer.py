@@ -12,6 +12,7 @@ from .reader import Reader
 from .chunkers.code import CodeChunker
 from .chunkers.text import TextChunker
 from tqdm import tqdm
+from semantic import Semantic_search
 
 class RagPipeline:
     def __init__(self):
@@ -19,7 +20,7 @@ class RagPipeline:
         self.code_chunker = CodeChunker()
         self.text_chunker = TextChunker()
         self.resurce_paths = []
-        self.chunks = {} # [{"file_path": chunks}]
+        self.chunks = {} # [{"file_path": chunk}]
         self.tokenized_chunks = []
         self.bm25 = None
         self.max_chunk_size = 0
@@ -123,14 +124,18 @@ class RagPipeline:
             pickle.dump(data, file)
     
     
-    def ingest(self, max_chunk_size):
+    def ingest(self, max_chunk_size, semantic=False):
         self.max_chunk_size = max_chunk_size
         self.chunk()
-        self.build()
-        self.save("data/processed/indexed_chunks")
+        if semantic:
+            search = Semantic_search()
+            search.store(self.chunks)
+        else:
+            self.build()
+            self.save("data/processed/lexical_index")
 
     
-    def load(self, path="data/processed/indexed_chunks"):
+    def load(self, path="data/processed/lexical_index"):
         print("loading data from disk ...")
 
         with open(path, "rb") as file:
@@ -234,7 +239,7 @@ class RagPipeline:
             )
         
 
-    def get_search_result(self, dataset_path, k):
+    def get_search_result(self, dataset_path, k, semantic=False):
 
         cache_file = "data/query_cache.json"
         cache_data = {}
@@ -261,6 +266,8 @@ class RagPipeline:
                     if question_cache_key in cache_data.keys():
                         student_results.append(cache_data[question_cache_key])
                     else:
+                        # if semantic:
+                        #     chunks = self.search
                         chunks = self.search(question, k, str(file))
                         student_results.append(chunks)
 
