@@ -11,8 +11,9 @@ import os
 from .reader import Reader
 from .chunkers.code import CodeChunker
 from .chunkers.text import TextChunker
+from .semantic import Semantic_search
 from tqdm import tqdm
-from semantic import Semantic_search
+import uuid
 
 class RagPipeline:
     def __init__(self):
@@ -20,10 +21,11 @@ class RagPipeline:
         self.code_chunker = CodeChunker()
         self.text_chunker = TextChunker()
         self.resurce_paths = []
-        self.chunks = {} # [{"file_path": chunk}]
+        self.chunks = {} # {"file_path": chunk}
         self.tokenized_chunks = []
         self.bm25 = None
         self.max_chunk_size = 0
+        self.semantic_search = Semantic_search()
             
     def tokenize(self, text):
         return re.split(r'[-\s,./;<=>?!_(){}":]+', text.lower())
@@ -128,8 +130,9 @@ class RagPipeline:
         self.max_chunk_size = max_chunk_size
         self.chunk()
         if semantic:
-            search = Semantic_search()
-            search.store(self.chunks)
+            print("running semantic indexing...")
+            self.semantic_search = Semantic_search()
+            self.semantic_search.store(self.chunks)
         else:
             self.build()
             self.save("data/processed/lexical_index")
@@ -212,7 +215,15 @@ class RagPipeline:
                 data = {}
 
             if single:
-                data.update({question_cache_key: result})
+                data.update({
+                    question_cache_key: 
+                        {
+                            "question_id": str(uuid.uuid4()),
+                            "question": question,
+                            "retrieved_sources": result,
+                            "storing_file": storing_file
+                        }
+                    })
             else:
                 data.update({
                     question_cache_key: {
@@ -240,7 +251,8 @@ class RagPipeline:
         
 
     def get_search_result(self, dataset_path, k, semantic=False):
-
+        if semantic:
+            print("running semantic searching...")
         cache_file = "data/query_cache.json"
         cache_data = {}
     
@@ -266,9 +278,11 @@ class RagPipeline:
                     if question_cache_key in cache_data.keys():
                         student_results.append(cache_data[question_cache_key])
                     else:
-                        # if semantic:
-                        #     chunks = self.search
-                        chunks = self.search(question, k, str(file))
+                        if semantic:
+                            chunks = self.semantic_search.search(question, k, False, str(file))
+                        else:
+                            chunks = self.search(question, k, str(file))
+
                         student_results.append(chunks)
 
         return StudentSearchResults(search_results=student_results, k=k)

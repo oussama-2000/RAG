@@ -15,7 +15,7 @@ class CLI:
         self.indexer = RagPipeline()
 
     def index(self, max_chunk_size: int):
-        self.indexer.ingest(max_chunk_size)
+        self.indexer.ingest(max_chunk_size, semantic=True)
         print("indexing is done and saved into 'data/processed/indexed_chunks' .")
 
 
@@ -32,7 +32,7 @@ class CLI:
     def search_dataset(self, dataset_path: str, k: int, save_directory: str):
 
         self.indexer.load()
-        search_result: StudentSearchResults = self.indexer.get_search_result(dataset_path, k)
+        search_result: StudentSearchResults = self.indexer.get_search_result(dataset_path, k, semantic=True)
         self.indexer.save_searching_output(search_result, k, save_directory)
 
 
