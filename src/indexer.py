@@ -11,7 +11,7 @@ import os
 from .reader import Reader
 from .chunkers.code import CodeChunker
 from .chunkers.text import TextChunker
-from .semantic import Semantic_search
+# from .semantic import Semantic_search
 from tqdm import tqdm
 import uuid
 
@@ -25,21 +25,26 @@ class RagPipeline:
         self.tokenized_chunks = []
         self.bm25 = None
         self.max_chunk_size = 0
-        self.semantic_search = Semantic_search()
+        # self.semantic_search = Semantic_search()
             
     def tokenize(self, text):
-        return re.split(r'[-\s,./;<=>?!_(){}":]+', text.lower())
+        # return re.split(r'[-\s,./;<=>?!_(){}":]+', text.lower())
+        return re.split(r"[\W_]+", text.lower())
 
 
     def clean_tokenized_chunks(self, chunks):
 
         cleaned_chunks = []
 
+        with open("src/stop_words.txt", "r") as file:
+            stop_words = file.read()
+
+
         for chunk in chunks:
             cleaned_chunk = []
 
             for token in chunk:
-                token = token.strip(".,;:!?(){}[]'\"-_")
+                # token = token.strip(".,;:!?(){}[]'\"-_")
 
                 if len(token) < 3 or not token:
                     continue
@@ -60,7 +65,7 @@ class RagPipeline:
         # else we skip none changed files
 
         try:
-            with open("data/processed/indexed_chunks", "rb") as file:
+            with open("data/processed/lexical_index", "rb") as file:
                 data = pickle.load(file)
 
                 if data['max_chunk_size'] != self.max_chunk_size:
@@ -108,6 +113,10 @@ class RagPipeline:
             self.tokenize(chunk)
             for chunk in chunks_content
         ]
+
+        # print(tokenized_chunks)
+        # exit()
+
         self.tokenized_chunks = self.clean_tokenized_chunks(tokenized_chunks) 
         self.bm25 = BM25Okapi(tokenized_chunks)
 
@@ -131,8 +140,8 @@ class RagPipeline:
         self.chunk()
         if semantic:
             print("running semantic indexing...")
-            self.semantic_search = Semantic_search()
-            self.semantic_search.store(self.chunks)
+            # self.semantic_search = Semantic_search()
+            # self.semantic_search.store(self.chunks)
         else:
             self.build()
             self.save("data/processed/lexical_index")
@@ -279,7 +288,8 @@ class RagPipeline:
                         student_results.append(cache_data[question_cache_key])
                     else:
                         if semantic:
-                            chunks = self.semantic_search.search(question, k, False, str(file))
+                            pass
+                            # chunks = self.semantic_search.search(question, k, False, str(file))
                         else:
                             chunks = self.search(question, k, str(file))
 

@@ -1,7 +1,6 @@
 """CLI entry point"""
 
 from .models import StudentSearchResults, StudentSearchResultsAndAnswer, MinimalAnswer
-from .reader import Reader
 from .indexer import RagPipeline
 from .recall_evaluation import Recall
 import fire
@@ -14,10 +13,9 @@ class CLI:
     def __init__(self):
         self.indexer = RagPipeline()
 
-    def index(self, max_chunk_size: int):
-        self.indexer.ingest(max_chunk_size, semantic=True)
+    def index(self, max_chunk_size: int, semantic=False):
+        self.indexer.ingest(max_chunk_size, semantic=semantic)
         print("indexing is done and saved into 'data/processed/indexed_chunks' .")
-
 
     def search(self, query: str, k: int):
         search_result = self.indexer.check_cache_single_q(query, k)
@@ -29,10 +27,10 @@ class CLI:
         print(search_result)
 
 
-    def search_dataset(self, dataset_path: str, k: int, save_directory: str):
+    def search_dataset(self, dataset_path: str, k: int, save_directory: str, semantic=False):
 
         self.indexer.load()
-        search_result: StudentSearchResults = self.indexer.get_search_result(dataset_path, k, semantic=True)
+        search_result: StudentSearchResults = self.indexer.get_search_result(dataset_path, k, semantic=semantic)
         self.indexer.save_searching_output(search_result, k, save_directory)
 
 

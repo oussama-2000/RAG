@@ -5,14 +5,6 @@ import json
 from .models import MinimalSearchResults
 from pathlib import Path
 
-# data = {
-#     "/data/0": {"text": "color"},
-#     "/data/1": {"text": "USA"},
-#     "/data/2": {"text": "sky"},
-#     "/data/3": {"text": "nagasaki bomb"},
-# }
-
-
 
 
 class Semantic_search:
@@ -51,8 +43,8 @@ class Semantic_search:
         result = []
         q_vectors = np.array(self.model.encode([query], normalize_embeddings=True))
         distances, indices = self.index.search(q_vectors, k)
-        for i, d in zip(indices[0], distances):
-            d = float("-inf")
+        for i in indices[0]:
+
             result.append(self.data[tuple(self.data)[i]])
 
         if single:
@@ -65,11 +57,4 @@ class Semantic_search:
             storing_file= Path(storing_file).name
         )
 
-
-
-# q = "blue"
-
-# search = Semantic_search()
-# # search.store(data)
-# search.search(q, 3)
 
